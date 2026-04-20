@@ -1,15 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
+// import { Inter_Tight } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const suissReg = localFont({
+  src: "../../public/fonts/SuisseRegular.ttf",
+  variable: "--suisseReg",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const VisbyCF = localFont({
+  src: "../../public/fonts/VisbyCF.ttf",
+  variable: "--VisbyCF",
+  display: "swap",
+});
+
+const BoogyBrutPoster = localFont({
+  src: "../../public/fonts/BoogyBrutPoster.woff2",
+  variable: "--BoogyBrutPoster",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -23,7 +32,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html
+      lang='en'
+      className={`${suissReg.variable} ${VisbyCF.variable} ${BoogyBrutPoster.variable}`}
+    >
       <body>{children}</body>
     </html>
   );

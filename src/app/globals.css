@@ -1,40 +1,46 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html {
-  height: 100%;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --black: #333438;
+  --lightBlack: #808080;
+  --green3: #aeff12;
+  --green3b: #7fc005;
+  --tan: #f2efe9;
+  --tan2: #e1e1d9;
+  --tan3: #c4c4bc;
+  --tan4: #989890;
+  --white: #fffdfb;
+  --gray: #dfdddd;
+  --gray2: #d7d0d0;
+  --gray3: #93969e;
+  --purple: #5f46df;
+  --purple2: #2703db;
 }
 
 * {
-  box-sizing: border-box;
-  padding: 0;
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  text-decoration: none;
+  line-height: 120%;
+  font-family: var(--suisseReg);
+  /* scroll-behavior: smooth; */
+  /* scroll-margin-top: 20px; */
+  /* overscroll-behavior: none; */
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 62.5%;
+  height: 100%;
+}
+
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+  background: transparent;
+}
+
+body {
+  font-size: 1.6rem;
 }
 
 a {
@@ -42,8 +48,142 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+span {
+  font-family: var(--VisbyCF);
+  /* color: var(--black); */
+  text-transform: uppercase;
+}
+
+h1 {
+  font-size: 6rem;
+  line-height: 1;
+  letter-spacing: -2px;
+  /* white-space: nowrap; */
+}
+
+h2 {
+  font-size: 5rem;
+  line-height: 1;
+  /* text-transform: none; */
+}
+
+h3 {
+  font-size: 2rem;
+  line-height: 1em;
+}
+
+h4 {
+  font-size: 1.8rem;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+
+h5 {
+  font-size: 1.7rem;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+
+h6 {
+  font-size: 1.6rem;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+
+button {
+  border: none;
+  background-color: transparent;
+  outline: none;
+}
+
+p,
+input,
+textarea {
+  hyphens: auto;
+  letter-spacing: -0.2px;
+  margin-bottom: 0;
+  color: var(--black);
+  font-size: 1em;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+}
+
+.toastFont {
+  font-family: var(--interTight);
+  font-weight: 700;
+}
+
+/* ::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+  background: var(--secondary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary);
+}
+
+::selection {
+  background: var(--secondary);
+}
+::-moz-selection {
+  background: var(--secondary);
+} */
+
+/* .h2v2 {
+  font-size: 6rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+} */
+
+@media screen and (max-width: 768px) {
   html {
-    color-scheme: dark;
+    font-size: 55%;
+  }
+
+  p {
+    font-size: 113.7%;
+  }
+
+  h1 {
+    font-size: 4.5rem;
+  }
+
+  h2 {
+    font-size: 3.5rem;
   }
 }
+
+@media screen and (max-width: 568px) {
+  html {
+    font-size: 50%;
+  }
+
+  p {
+    hyphens: auto;
+  }
+
+}
+
+/* .toastFont {
+} */
+
+/* Only use in production */
+/* @media screen and (max-width: 480px) {
+  h1 {
+    font-size: 4rem;
+    letter-spacing: -2px;
+  }
+  h2 {
+    letter-spacing: -2px;
+  }
+} */
