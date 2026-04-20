@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 // import { Inter_Tight } from "next/font/google";
 import "./globals.css";
+import Nav from "@/components/shared/Nav/Nav";
 
 const suissReg = localFont({
   src: "../../public/fonts/SuisseRegular.ttf",
@@ -36,7 +37,10 @@ export default function RootLayout({
       lang='en'
       className={`${suissReg.variable} ${VisbyCF.variable} ${BoogyBrutPoster.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <Nav />
+        {children}
+      </body>
     </html>
   );
 }

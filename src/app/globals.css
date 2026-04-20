@@ -110,6 +110,7 @@ textarea {
   margin-bottom: 0;
   color: var(--black);
   font-size: 1em;
+  line-height: 1.5;
 }
 
 input:focus,
@@ -122,29 +123,6 @@ textarea:focus {
   font-weight: 700;
 }
 
-/* ::-webkit-scrollbar-thumb {
-  border-radius: 20px;
-  background: var(--secondary);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--secondary);
-}
-
-::selection {
-  background: var(--secondary);
-}
-::-moz-selection {
-  background: var(--secondary);
-} */
-
-/* .h2v2 {
-  font-size: 6rem;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: -0.04em;
-} */
-
 @media screen and (max-width: 768px) {
   html {
     font-size: 55%;
@@ -155,7 +133,7 @@ textarea:focus {
   }
 
   h1 {
-    font-size: 4.5rem;
+    font-size: 5rem;
   }
 
   h2 {
@@ -171,19 +149,4 @@ textarea:focus {
   p {
     hyphens: auto;
   }
-
 }
-
-/* .toastFont {
-} */
-
-/* Only use in production */
-/* @media screen and (max-width: 480px) {
-  h1 {
-    font-size: 4rem;
-    letter-spacing: -2px;
-  }
-  h2 {
-    letter-spacing: -2px;
-  }
-} */
