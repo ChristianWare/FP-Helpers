@@ -88,7 +88,7 @@
   object-fit: contain;
 }
 
-@media screen and (max-width: 1268px) {
+@media screen and (max-width: 1468px) {
   .bottom {
     grid-gap: 2rem;
     padding: 0rem;
@@ -98,25 +98,15 @@
   .box {
     padding: 2rem;
   }
-
-  .box:nth-child(1) {
-    transform: rotate(0deg);
-    top: 0px;
-  }
-
-  .box:nth-child(3) {
-    transform: rotate(0deg);
-    top: 0px;
-  }
 }
 
-@media screen and (max-width: 1068px) {
+@media screen and (max-width: 1268px) {
   .top {
     flex-direction: column;
   }
 
   .bottom {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -149,7 +139,7 @@
   }
 }
 
-@media screen and (max-width: 568px) {
+@media screen and (max-width: 668px) {
   .bottom {
     grid-template-columns: repeat(1, 1fr);
   }

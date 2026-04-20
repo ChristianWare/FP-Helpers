@@ -1,6 +1,7 @@
 .container {
   background-color: var(--tan);
   padding: 10rem 0rem;
+  padding-bottom: 0rem;
 }
 
 .top {

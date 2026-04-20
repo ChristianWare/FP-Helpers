@@ -7,22 +7,22 @@ const data = [
   {
     id: 1,
     feature: "Set the list",
-    desc: "Recipient adds groceries and prescription pickups throughout the week, right from their own simple view.",
+    desc: "The recipient adds groceries and prescription pickups throughout the week from their own simple view — typing or using voice input whenever something comes to mind.",
   },
   {
     id: 2,
     feature: "Get the reminder",
-    desc: "When it's your turn, the list is waiting — and a reminder goes out by email or WhatsApp two days before your shift.",
+    desc: "Two days before the shift, the scheduled helper gets a reminder by email or WhatsApp with the list and pickup details ready to go.",
   },
   {
     id: 3,
     feature: "Pick it up",
-    desc: "Grab the debit card, shop the list, and swing by the pharmacy if there's a prescription ready.",
+    desc: "The helper stops by to grab the debit card, shops the list at the store, and swings by the pharmacy if there's a prescription ready for pickup.",
   },
   {
     id: 4,
     feature: "Deliver and check in",
-    desc: "Drop everything off, return the card, and leave a quick note on how your they are doing. That's it!",
+    desc: "The helper drops off the groceries, returns the card, logs what was spent, and leaves a short note on how their friend is doing — that's it!",
   },
 ];
 

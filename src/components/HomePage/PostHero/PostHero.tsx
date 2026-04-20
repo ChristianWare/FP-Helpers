@@ -9,20 +9,19 @@ const data = [
   {
     icon: <Organizer width={75} height={75} className={styles.icon} />,
     feature: "The organizer",
-    desc: "You're the one who keeps the group chat going. We give you the tools to turn that energy into a real schedule.",
+    desc: "The one who brings the group together — setting up the arrangements, inviting helpers, and keeping the schedule running in the background.",
   },
   {
     icon: <Helper width={75} height={75} className={styles.icon} />,
     feature: "The helper",
-    desc: "You want to show up for your neighbor without the mental overhead. We make it easy to know when you're up and what's needed.",
+    desc: "One of the brothers/sisters in the rotation — showing up on their week to handle groceries, prescriptions, and a quick check-in on how things are going.",
   },
   {
     icon: <Recipient width={75} height={75} className={styles.icon} />,
-    feature: "The Recipient",
-    desc: "A simple, large-text view where you can say what you need — and see who's coming next.",
+    feature: "The recipient",
+    desc: "The friend being looked after — sharing what they need through a simple, large-text view and always knowing who's coming next.",
   },
 ];
-
 const PostHero = () => {
   return (
     <section className={styles.container}>
