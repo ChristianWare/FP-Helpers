@@ -1,0 +1,165 @@
+.container {
+  background-color: var(--tan);
+}
+
+.content {
+  padding-bottom: 5rem;
+}
+
+.top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+.topHeading {
+  line-height: 100%;
+  text-align: center;
+}
+
+.heading {
+  font-size: 1.6rem;
+  line-height: 1.3em;
+  width: 60%;
+  text-align: center;
+}
+
+.span {
+  color: var(--purple);
+  font-family: var(--BoogyBrutPoster);
+  margin-left: 0.7rem;
+  text-transform: lowercase;
+  font-size: 6rem;
+}
+
+.bottom {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 2rem;
+  /* padding: 0rem 10rem; */
+  margin-top: 5rem;
+}
+
+.box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7rem;
+  padding: 3rem;
+  border-radius: 10px;
+  background-color: var(--tan2);
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.icon {
+  color: var(--purple);
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.feature {
+  text-align: center;
+  color: var(--purple);
+  font-size: 2rem;
+  letter-spacing: normal;
+}
+
+.desc {
+  text-align: center;
+}
+
+.imgContainer {
+  position: relative;
+  width: 100%;
+  height: 250px;
+}
+
+.img {
+  object-fit: contain;
+}
+
+@media screen and (max-width: 1268px) {
+  .bottom {
+    grid-gap: 2rem;
+    padding: 0rem;
+    margin-top: 0rem;
+  }
+
+  .box {
+    padding: 2rem;
+  }
+
+  .box:nth-child(1) {
+    transform: rotate(0deg);
+    top: 0px;
+  }
+
+  .box:nth-child(3) {
+    transform: rotate(0deg);
+    top: 0px;
+  }
+}
+
+@media screen and (max-width: 1068px) {
+  .top {
+    flex-direction: column;
+  }
+
+  .bottom {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media screen and (max-width: 868px) {
+  .content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .top {
+    grid-template-columns: repeat(1, 1fr);
+    gap: 2rem;
+    padding-bottom: 0rem;
+    margin-bottom: 3rem;
+  }
+
+  .topHeading {
+    text-align: center;
+    margin-bottom: 0rem;
+  }
+
+  .heading {
+    width: 100%;
+  }
+
+  .bottom {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media screen and (max-width: 568px) {
+  .bottom {
+    grid-template-columns: repeat(1, 1fr);
+  }
+
+  .box {
+    align-items: center;
+    justify-content: center;
+  }
+
+  .desc {
+    text-align: center;
+  }
+}

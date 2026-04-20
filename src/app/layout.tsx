@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 // import { Inter_Tight } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/shared/Nav/Nav";
+import Footerii from "@/components/shared/Footerii/Footerii";
 
 const suissReg = localFont({
   src: "../../public/fonts/SuisseRegular.ttf",
@@ -40,6 +41,7 @@ export default function RootLayout({
       <body>
         <Nav />
         {children}
+        <Footerii />
       </body>
     </html>
   );
