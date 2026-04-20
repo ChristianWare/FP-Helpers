@@ -1,0 +1,621 @@
+// prisma/schema.prisma
+// Friendship Park Helpers
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  engineType    = "library"
+  binaryTargets = ["native", "darwin", "darwin-arm64"]
+}
+
+// =========================
+// ENUMS
+// =========================
+
+enum CircleRole {
+  ADMIN
+  HELPER
+  RECIPIENT
+}
+
+enum CircleStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum RotationCadence {
+  WEEKLY
+  BIWEEKLY
+  CUSTOM
+}
+
+enum ShiftStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  MISSED
+  SWAPPED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CARD
+  CASH
+  OTHER
+}
+
+enum GroceryItemStatus {
+  PENDING
+  ASSIGNED
+  PURCHASED
+  UNAVAILABLE
+  REMOVED
+}
+
+enum PickupReadyStatus {
+  CONFIRMED_READY
+  NEEDS_CALL
+  UNKNOWN
+}
+
+enum PickupStatus {
+  PENDING
+  PICKED_UP
+  UNAVAILABLE
+  SKIPPED
+}
+
+enum SwapStatus {
+  OPEN
+  CLAIMED
+  CANCELLED
+  EXPIRED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum NotificationChannel {
+  EMAIL
+  WHATSAPP
+  SMS
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+}
+
+enum ShiftEventType {
+  CREATED
+  ASSIGNED
+  REASSIGNED
+  SWAP_REQUESTED
+  SWAP_CLAIMED
+  COMPLETED
+  FLAGGED
+  NOTE_ADDED
+}
+
+// =========================
+// AUTH MODELS
+// =========================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  phone         String?
+  password      String?
+
+  passwordSetToken       String?   @unique
+  passwordSetTokenExpiry DateTime?
+
+  // System-level flag — only you (super admin) have this set to true
+  isSuperAdmin Boolean @default(false)
+
+  // Notification preferences
+  emailOptIn       Boolean             @default(true)
+  whatsappOptIn    Boolean             @default(false)
+  preferredChannel NotificationChannel @default(EMAIL)
+
+  accounts Account[]
+  sessions Session[]
+
+  // Circle relations
+  memberships     CircleMembership[]
+  recipientOf     CareCircle[]       @relation("CircleRecipient")
+  invitationsSent Invitation[]       @relation("InvitationSender")
+
+  // Shift relations
+  assignedShifts        Shift[]              @relation("ShiftAssignee")
+  originalShifts        Shift[]              @relation("ShiftOriginalAssignee")
+  groceryItemsAdded     GroceryItem[]        @relation("GroceryItemAddedBy")
+  pickupsAdded          PrescriptionPickup[] @relation("PickupAddedBy")
+  swapRequestsMade      SwapRequest[]        @relation("SwapRequester")
+  swapRequestsClaimed   SwapRequest[]        @relation("SwapClaimer")
+  unavailabilityPeriods Unavailability[]
+  shiftEventsActed      ShiftEvent[]         @relation("ShiftEventActor")
+  notificationsReceived NotificationLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model EmailVerificationToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+  @@index([email])
+  @@index([expires])
+}
+
+model PasswordResetToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+  @@index([email])
+  @@index([expires])
+}
+
+// =========================
+// CARE CIRCLE — the core tenant
+// =========================
+
+model CareCircle {
+  id     String       @id @default(cuid())
+  name   String // e.g. "Harold's Circle"
+  status CircleStatus @default(ACTIVE)
+
+  // The recipient (elderly friend)
+  recipientId String?
+  recipient   User?   @relation("CircleRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
+
+  // Contact / location info
+  address          String?
+  accessNotes      String? @db.Text // "spare key under mat", "ring doorbell twice"
+  emergencyContact String?
+  emergencyPhone   String?
+  internalNotes    String? @db.Text // admin-only
+
+  // Rotation settings
+  rotationCadence    RotationCadence @default(WEEKLY)
+  rotationDayOfWeek  Int             @default(6) // 0 = Sunday, 6 = Saturday
+  lookaheadWeeks     Int             @default(8)
+  typicalArrivalTime String? // "around 10am"
+
+  // Reminder defaults
+  reminderDaysBefore Int[] @default([7, 2, 1])
+
+  // Relations
+  memberships         CircleMembership[]
+  invitations         Invitation[]
+  shifts              Shift[]
+  groceryItems        GroceryItem[]
+  prescriptions       Prescription[]
+  pharmacies          Pharmacy[]
+  standingPreferences StandingPreference[]
+  unavailability      Unavailability[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([recipientId])
+}
+
+// =========================
+// CIRCLE MEMBERSHIP
+// Roles live here, not on User
+// =========================
+
+model CircleMembership {
+  id       String     @id @default(cuid())
+  userId   String
+  circleId String
+  role     CircleRole
+  active   Boolean    @default(true)
+
+  // Tracking
+  shiftsCompleted Int       @default(0)
+  lastActiveAt    DateTime?
+
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  circle CareCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  joinedAt DateTime @default(now())
+
+  @@unique([userId, circleId])
+  @@index([circleId])
+  @@index([userId])
+  @@index([role])
+}
+
+// =========================
+// INVITATIONS
+// =========================
+
+model Invitation {
+  id       String     @id @default(cuid())
+  circleId String
+  circle   CareCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  email   String
+  role    CircleRole
+  token   String           @unique
+  status  InvitationStatus @default(PENDING)
+  expires DateTime
+
+  invitedById String?
+  invitedBy   User?   @relation("InvitationSender", fields: [invitedById], references: [id], onDelete: SetNull)
+
+  acceptedAt DateTime?
+  message    String?   @db.Text // optional personal note from inviter
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([circleId])
+  @@index([email])
+  @@index([status])
+  @@index([expires])
+}
+
+// =========================
+// SHIFTS
+// =========================
+
+model Shift {
+  id       String     @id @default(cuid())
+  circleId String
+  circle   CareCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  scheduledDate DateTime
+  status        ShiftStatus @default(SCHEDULED)
+
+  // Current assignee
+  assignedUserId String?
+  assignedUser   User?   @relation("ShiftAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
+
+  // Who was originally assigned (preserved through swaps)
+  originalAssignedUserId String?
+  originalAssignedUser   User?   @relation("ShiftOriginalAssignee", fields: [originalAssignedUserId], references: [id], onDelete: SetNull)
+
+  // Completion data
+  completedAt   DateTime?
+  amountSpent   Int? // stored in cents
+  pharmacySpent Int? // separate line for pharmacy copay
+  paymentMethod PaymentMethod?
+  cardReturned  Boolean?
+  visitNote     String?        @db.Text
+  wellnessNote  String?        @db.Text
+  flagged       Boolean        @default(false) // set true if wellness concern
+
+  // Relations
+  groceryItems        GroceryItem[]
+  prescriptionPickups PrescriptionPickup[]
+  receiptPhotos       ReceiptPhoto[]
+  swapRequests        SwapRequest[]
+  events              ShiftEvent[]
+  notifications       NotificationLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([circleId])
+  @@index([assignedUserId])
+  @@index([scheduledDate])
+  @@index([status])
+}
+
+// =========================
+// GROCERY ITEMS
+// Owned by the circle (recipient), assigned to shifts
+// =========================
+
+model GroceryItem {
+  id       String     @id @default(cuid())
+  circleId String
+  circle   CareCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  name     String
+  quantity String? // freeform: "2", "a dozen", "the big box"
+  notes    String? @db.Text
+
+  addedById String?
+  addedBy   User?   @relation("GroceryItemAddedBy", fields: [addedById], references: [id], onDelete: SetNull)
+
+  status GroceryItemStatus @default(PENDING)
+
+  // Recurring items auto-appear each shift
+  isRecurring     Boolean @default(false)
+  recurringEveryN Int     @default(1) // 1 = every shift, 2 = every other, etc.
+
+  // When assigned to a shift
+  assignedShiftId String?
+  assignedShift   Shift?  @relation(fields: [assignedShiftId], references: [id], onDelete: SetNull)
+
+  // Purchase tracking
+  purchasedAt       DateTime?
+  purchasedNote     String?
+  purchasedPhotoUrl String?
+  couldNotFind      Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([circleId])
+  @@index([assignedShiftId])
+  @@index([status])
+  @@index([isRecurring])
+}
+
+// =========================
+// STANDING PREFERENCES
+// Allergies, brand prefs, "never buy X"
+// =========================
+
+model StandingPreference {
+  id       String     @id @default(cuid())
+  circleId String
+  circle   CareCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  category String // "dietary" | "allergy" | "brand" | "avoid" | "other"
+  content  String  @db.Text
+  active   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([circleId])
+}
+
+// =========================
+// PHARMACIES & PRESCRIPTIONS
+// =========================
+
+model Pharmacy {
+  id       String     @id @default(cuid())
+  circleId String
+  circle   CareCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  name      String
+  address   String?
+  phone     String?
+  hours     String?
+  isDefault Boolean @default(false)
+
+  prescriptions Prescription[]
+  pickups       PrescriptionPickup[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([circleId])
+}
+
+model Prescription {
+  id       String     @id @default(cuid())
+  circleId String
+  circle   CareCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  medicationName    String
+  defaultPharmacyId String?
+  defaultPharmacy   Pharmacy? @relation(fields: [defaultPharmacyId], references: [id], onDelete: SetNull)
+
+  typicalRefillDays Int? // e.g. 30
+  lastPickupDate    DateTime?
+  notes             String?   @db.Text
+  active            Boolean   @default(true)
+
+  pickups PrescriptionPickup[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([circleId])
+  @@index([active])
+}
+
+model PrescriptionPickup {
+  id      String @id @default(cuid())
+  shiftId String
+  shift   Shift  @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+
+  // Link to registered prescription if applicable
+  prescriptionId String?
+  prescription   Prescription? @relation(fields: [prescriptionId], references: [id], onDelete: SetNull)
+
+  // Snapshot of what was requested (in case prescription is edited later)
+  medicationName       String
+  pharmacyId           String?
+  pharmacy             Pharmacy? @relation(fields: [pharmacyId], references: [id], onDelete: SetNull)
+  pharmacyNameSnapshot String?
+
+  readyStatus   PickupReadyStatus @default(UNKNOWN)
+  expectedCopay Int? // cents
+  notes         String?           @db.Text
+
+  // Audit
+  addedById String?
+  addedBy   User?   @relation("PickupAddedBy", fields: [addedById], references: [id], onDelete: SetNull)
+
+  // Pickup result
+  status          PickupStatus @default(PENDING)
+  actualAmount    Int?
+  pickedUpAt      DateTime?
+  receiptPhotoUrl String?
+  pickupNote      String?      @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shiftId])
+  @@index([status])
+}
+
+// =========================
+// SWAPS & UNAVAILABILITY
+// =========================
+
+model SwapRequest {
+  id      String @id @default(cuid())
+  shiftId String
+  shift   Shift  @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+
+  requestedById String
+  requestedBy   User   @relation("SwapRequester", fields: [requestedById], references: [id], onDelete: Cascade)
+
+  claimedById String?
+  claimedBy   User?   @relation("SwapClaimer", fields: [claimedById], references: [id], onDelete: SetNull)
+
+  status     SwapStatus @default(OPEN)
+  reason     String?    @db.Text
+  resolvedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shiftId])
+  @@index([status])
+}
+
+model Unavailability {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Null = applies to all circles the user is in
+  circleId String?
+  circle   CareCircle? @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  startDate DateTime
+  endDate   DateTime
+  reason    String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([circleId])
+  @@index([startDate, endDate])
+}
+
+// =========================
+// RECEIPTS & AUDIT
+// =========================
+
+model ReceiptPhoto {
+  id      String @id @default(cuid())
+  shiftId String
+  shift   Shift  @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+
+  url        String
+  caption    String?
+  uploadedAt DateTime @default(now())
+
+  @@index([shiftId])
+}
+
+model ShiftEvent {
+  id      String         @id @default(cuid())
+  shiftId String
+  shift   Shift          @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  type    ShiftEventType
+
+  actorId String?
+  actor   User?   @relation("ShiftEventActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  metadata Json? // e.g. { "fromUserId": "...", "toUserId": "..." } for reassignments
+
+  createdAt DateTime @default(now())
+
+  @@index([shiftId])
+  @@index([createdAt])
+}
+
+// =========================
+// NOTIFICATIONS
+// =========================
+
+model NotificationLog {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  shiftId String?
+  shift   Shift?  @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+
+  channel  NotificationChannel
+  template String // e.g. "shift_reminder_t2"
+  status   NotificationStatus  @default(PENDING)
+
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  error       String?   @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([shiftId])
+  @@index([status])
+  @@index([template])
+}
