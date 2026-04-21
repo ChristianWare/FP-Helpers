@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Nav from "@/components/shared/Nav/Nav";
 import Footerii from "@/components/shared/Footerii/Footerii";
+import SessionProvider from "@/components/shared/SessionProvider/SessionProvider";
 
 const suissReg = localFont({
   src: "../../public/fonts/SuisseRegular.ttf",
@@ -40,7 +41,7 @@ export default function RootLayout({
     >
       <body>
         <Nav />
-        {children}
+        <SessionProvider>{children}</SessionProvider>
         <Footerii />
       </body>
     </html>

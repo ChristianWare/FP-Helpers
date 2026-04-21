@@ -1,0 +1,192 @@
+/* app/(auth)/login/LoginPage.module.css */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background-color: var(--tan);
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  padding: 40px 32px;
+  border-radius: 12px;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.cardTop {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.heading {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: #111;
+  letter-spacing: normal;
+}
+
+.subheading {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  letter-spacing: normal;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 15px;
+  letter-spacing: normal;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  background: #fff;
+  color: #111;
+  transition: border-color 0.15s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #111;
+}
+
+.inputError {
+  border-color: #dc2626;
+}
+
+.fieldError {
+  font-size: 14px;
+  color: #dc2626;
+  letter-spacing: normal;
+}
+
+.passwordWrapper {
+  position: relative;
+}
+
+.eyeBtn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 14px;
+  letter-spacing: normal;
+  color: #666;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.forgotLink {
+  font-size: 14px;
+  letter-spacing: normal;
+  color: #666;
+  text-decoration: none;
+}
+
+.forgotLink:hover {
+  color: #111;
+  text-decoration: underline;
+}
+
+.errorBanner {
+  padding: 10px 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.submitBtn {
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-top: 8px;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: #000;
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.registerPrompt {
+  text-align: center;
+  margin: 24px 0 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.registerLink {
+  color: #111;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.registerLink:hover {
+  text-decoration: underline;
+}
+
+.loadingWrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid #e5e5e5;
+  border-top-color: #111;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
