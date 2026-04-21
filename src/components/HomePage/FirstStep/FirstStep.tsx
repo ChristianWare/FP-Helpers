@@ -3,13 +3,13 @@ import LayoutWrapper from "@/components/shared/LayoutWrapper";
 const data = [
   {
     id: 14,
-    title: "Create a circle",
+    title: "Organize a circle",
     desc: "Create a circle and invite your friends to join. You can also join existing circles.",
   },
   {
     id: 1,
-    title: "Login",
-    desc: "Login with your Google account to get started. We use Google for authentication and do not store any of your data.",
+    title: "Find a Circle",
+    desc: "Search for circles in your area and join one that fits your needs.",
   },
 ];
 

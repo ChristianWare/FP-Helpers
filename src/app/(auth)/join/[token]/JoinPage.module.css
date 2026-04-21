@@ -1,0 +1,81 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #f7f7f8;
+}
+
+.card {
+  width: 100%;
+  max-width: 480px;
+  background: #fff;
+  padding: 40px 32px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.cardTop {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #16a34a;
+  margin: 0 0 8px;
+}
+
+.heading {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: #111;
+  line-height: 1.3;
+}
+
+.subheading {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.errorIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.homeLink {
+  display: block;
+  text-align: center;
+  margin-top: 16px;
+  font-size: 13px;
+  color: #666;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.homeLink:hover {
+  color: #111;
+}
+
+.loginPrompt {
+  text-align: center;
+  margin: 24px 0 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.loginLink {
+  color: #111;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.loginLink:hover {
+  text-decoration: underline;
+}

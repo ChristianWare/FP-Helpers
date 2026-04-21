@@ -38,10 +38,13 @@ export default withAuth((req: NextRequest & { auth?: any }) => {
     "/forgot-password",
     "/reset-password",
     "/verify-email",
+    "/check-email",
   ]);
 
-  // Invitation acceptance is public (token acts as the credential)
-  const isInvitePage = pathname.startsWith("/invite/");
+  // Invitation acceptance and join-link pages are public
+  // (token in the URL acts as the credential)
+  const isInvitePage =
+    pathname.startsWith("/invite/") || pathname.startsWith("/join/");
 
   if (publicPages.has(pathname) || isInvitePage) return NextResponse.next();
 
@@ -53,6 +56,7 @@ export default withAuth((req: NextRequest & { auth?: any }) => {
   const isShiftsArea = pathname.startsWith("/shifts");
   const isMyCircleArea = pathname.startsWith("/my-circle");
   const isSettings = pathname.startsWith("/settings");
+  const isCreateCircle = pathname.startsWith("/create-circle");
 
   const authedOnly =
     isAdminArea ||
@@ -60,7 +64,8 @@ export default withAuth((req: NextRequest & { auth?: any }) => {
     isCircleArea ||
     isShiftsArea ||
     isMyCircleArea ||
-    isSettings;
+    isSettings ||
+    isCreateCircle;
 
   const isLoggedIn = Boolean((req as any).auth?.user);
 
