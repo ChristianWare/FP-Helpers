@@ -1,16 +1,15 @@
 import styles from "./FirstStep.module.css";
 import LayoutWrapper from "@/components/shared/LayoutWrapper";
 const data = [
-  
   {
     id: 14,
     title: "Create a circle",
-  
+    desc: "Create a circle and invite your friends to join. You can also join existing circles.",
   },
   {
     id: 1,
     title: "Login",
-    
+    desc: "Login with your Google account to get started. We use Google for authentication and do not store any of your data.",
   },
 ];
 
@@ -30,7 +29,7 @@ const FirstStep = () => {
               {data.map((x) => (
                 <div className={styles.card} key={x.id}>
                   <h3 className={styles.title}>{x.title}</h3>
-                
+                  <p className={styles.desc}>{x.desc}</p>
                 </div>
               ))}
             </div>
