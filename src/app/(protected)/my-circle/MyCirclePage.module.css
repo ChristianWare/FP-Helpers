@@ -1,9 +1,9 @@
 /* app/(protected)/my-circle/MyCirclePage.module.css */
 
-.page {
+.container {
   min-height: 100vh;
-  background-color: #fff;
-  padding: 40px 20px;
+  background-color: var(--tan);
+  padding-top: 7rem;
 }
 
 .wrapper {
@@ -20,11 +20,11 @@
 }
 
 .greeting {
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: normal;
-  color: #111;
-  margin: 0 0 4px;
+  font-size: 10rem;
+  font-family: var(--BoogyBrutPoster);
+  text-transform: none;
+  letter-spacing: 0.5px;
+  color: var(--purple);
 }
 
 .circleName {

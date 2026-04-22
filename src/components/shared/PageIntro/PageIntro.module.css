@@ -106,6 +106,10 @@
 }
 
 @media screen and (max-width: 568px) {
+  .container {
+    padding-top: 7rem;
+  }
+
   .heading,
   .copy {
     text-align: center;
