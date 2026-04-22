@@ -1,17 +1,11 @@
 // actions/grocery/addGroceryItem.ts
+
 "use server";
 
 import { auth } from "../../../auth";
 import { db } from "@/lib/db";
-import { z } from "zod";
+import { getNextShiftForCircle } from "@/lib/shifts/getNextShift";
 import { revalidatePath } from "next/cache";
-
-const AddItemSchema = z.object({
-  circleId: z.string().min(1),
-  name: z.string().min(1, "Item name is required").max(200),
-  quantity: z.string().max(100).optional(),
-  notes: z.string().max(500).optional(),
-});
 
 export async function addGroceryItem(values: {
   circleId: string;
@@ -22,29 +16,32 @@ export async function addGroceryItem(values: {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not signed in" };
 
-  const validated = AddItemSchema.safeParse(values);
-  if (!validated.success) return { error: "Please enter an item name" };
+  if (!values.name.trim()) return { error: "Item name is required" };
 
-  const { circleId, name, quantity, notes } = validated.data;
-
-  // Verify user is a member of this circle
   const membership = await db.circleMembership.findUnique({
-    where: { userId_circleId: { userId: session.user.id, circleId } },
+    where: {
+      userId_circleId: { userId: session.user.id, circleId: values.circleId },
+    },
   });
   if (!membership) return { error: "You're not a member of this circle" };
 
-  const item = await db.groceryItem.create({
+  // Auto-assign the item to the next upcoming shift, so it shows up on
+  // "this week's shopping" for the helper.
+  const nextShift = await getNextShiftForCircle(values.circleId);
+
+  await db.groceryItem.create({
     data: {
-      circleId,
-      name: name.trim(),
-      quantity: quantity?.trim() || null,
-      notes: notes?.trim() || null,
+      circleId: values.circleId,
+      name: values.name.trim(),
+      quantity: values.quantity?.trim() || null,
+      notes: values.notes?.trim() || null,
       addedById: session.user.id,
       status: "PENDING",
+      assignedShiftId: nextShift?.id ?? null,
     },
   });
 
   revalidatePath("/my-circle");
 
-  return { success: true, item };
+  return { success: true };
 }

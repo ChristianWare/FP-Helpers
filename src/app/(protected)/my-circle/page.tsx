@@ -8,7 +8,6 @@ export default async function Page() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  // Find the circle where this user is the recipient
   const membership = await db.circleMembership.findFirst({
     where: {
       userId: session.user.id,
@@ -57,13 +56,11 @@ export default async function Page() {
   });
 
   if (!membership) {
-    // User isn't a recipient — bounce to dashboard
     redirect("/dashboard");
   }
 
   const circle = membership.circle;
 
-  // Fetch the next 4 upcoming shifts (today or later, not yet completed)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -87,27 +84,39 @@ export default async function Page() {
     take: 4,
   });
 
+  const nextShiftId = upcomingShifts[0]?.id ?? null;
+
   const helpers = circle.memberships.map((m) => ({
     firstName: m.user.firstName,
     lastName: m.user.lastName,
     phone: m.user.phone,
   }));
 
-  const groceryItems = circle.groceryItems.map((item) => ({
+  // Split grocery items: "this week" = assigned to the next shift
+  //                     "saved for later" = everything else (null or future shifts)
+  const allGroceryItems = circle.groceryItems.map((item) => ({
     id: item.id,
     name: item.name,
     quantity: item.quantity,
     notes: item.notes,
     status: item.status,
+    assignedShiftId: item.assignedShiftId,
     addedBy: item.addedBy
       ? `${item.addedBy.firstName} ${item.addedBy.lastName}`
       : null,
   }));
 
+  const thisWeekItems = nextShiftId
+    ? allGroceryItems.filter((item) => item.assignedShiftId === nextShiftId)
+    : [];
+  const savedForLaterItems = nextShiftId
+    ? allGroceryItems.filter((item) => item.assignedShiftId !== nextShiftId)
+    : allGroceryItems;
+
   const prescriptions = circle.prescriptions.map((rx) => ({
     id: rx.id,
     medicationName: rx.medicationName,
-    needsPickupThisWeek: false, // field exists but unused in current UI
+    needsPickupThisWeek: false,
     pharmacyName: rx.defaultPharmacy?.name ?? null,
     pharmacyPhone: rx.defaultPharmacy?.phone ?? null,
     notes: rx.notes,
@@ -135,7 +144,8 @@ export default async function Page() {
       rotationCadence={circle.rotationCadence}
       typicalArrivalTime={circle.typicalArrivalTime}
       upcomingShifts={shifts}
-      groceryItems={groceryItems}
+      thisWeekItems={thisWeekItems}
+      savedForLaterItems={savedForLaterItems}
       prescriptions={prescriptions}
       helpers={helpers}
     />

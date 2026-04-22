@@ -40,6 +40,7 @@ type GroceryItem = {
   quantity: string | null;
   notes: string | null;
   status: string;
+  assignedShiftId: string | null;
   addedBy: string | null;
 };
 
@@ -77,7 +78,8 @@ type Props = {
   rotationCadence: "WEEKLY" | "BIWEEKLY" | "CUSTOM";
   typicalArrivalTime: string | null;
   upcomingShifts: Shift[];
-  groceryItems: GroceryItem[];
+  thisWeekItems: GroceryItem[];
+  savedForLaterItems: GroceryItem[];
   prescriptions: Prescription[];
   helpers: Helper[];
 };
@@ -96,7 +98,8 @@ export default function MyCirclePage({
   rotationCadence,
   typicalArrivalTime,
   upcomingShifts,
-  groceryItems: initialItems,
+  thisWeekItems,
+  savedForLaterItems,
   prescriptions: initialPrescriptions,
   helpers,
 }: Props) {
@@ -370,16 +373,13 @@ export default function MyCirclePage({
           {/* This week's helper */}
           {thisWeekShift && thisWeekShift.helper && (
             <section className={styles.thisWeekBanner}>
-              <p className={styles.thisWeekLabel}>
-                {/* {formatShiftDate(new Date(thisWeekShift.scheduledDate))} */}This Week:
-              </p>
+              <p className={styles.thisWeekLabel}>This Week:</p>
               <h2 className={styles.thisWeekHelper}>
                 {thisWeekShift.helper.firstName} {thisWeekShift.helper.lastName}{" "}
                 is coming by
               </h2>
               <p className={styles.thisWeekDate}>
                 {formatShiftFullDate(new Date(thisWeekShift.scheduledDate))}
-                {/* {typicalArrivalTime && ` · ${typicalArrivalTime}`} */}
               </p>
               <a
                 href={`tel:${thisWeekShift.helper.phone}`}
@@ -451,15 +451,25 @@ export default function MyCirclePage({
             </section>
           )}
 
-          {/* Grocery List */}
+          {/* Grocery List — This Week */}
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>Grocery list</h2>
+              <h2 className={styles.sectionTitle}>This week&apos;s list</h2>
               <span className={styles.itemCount}>
-                {initialItems.length}{" "}
-                {initialItems.length === 1 ? "item" : "items"}
+                {thisWeekItems.length}{" "}
+                {thisWeekItems.length === 1 ? "item" : "items"}
               </span>
             </div>
+
+            {thisWeekShift && thisWeekShift.helper && (
+              <p className={styles.listContext}>
+                {thisWeekShift.helper.firstName} will pick these up{" "}
+                {formatShiftDate(
+                  new Date(thisWeekShift.scheduledDate),
+                ).toLowerCase()}
+                .
+              </p>
+            )}
 
             {showAddForm ? (
               <div className={styles.addForm}>
@@ -475,13 +485,18 @@ export default function MyCirclePage({
                   }}
                 />
                 <div className={styles.addFormRow}>
-                  <input
-                    type='text'
+                  <select
                     className={styles.inputMedium}
-                    placeholder='How many? (optional)'
                     value={itemQuantity}
                     onChange={(e) => setItemQuantity(e.target.value)}
-                  />
+                  >
+                    <option value=''>How many?</option>
+                    {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                      <option key={n} value={String(n)}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <textarea
                   className={styles.textareaMedium}
@@ -523,16 +538,128 @@ export default function MyCirclePage({
               </button>
             )}
 
-            {initialItems.length === 0 ? (
+            {thisWeekItems.length === 0 ? (
               <p className={styles.emptyText}>
-                Nothing on the list yet. Tap the button above to add what you
-                need.
+                Nothing on this week&apos;s list yet. Tap the button above to
+                add what you need.
               </p>
             ) : (
               <div className={styles.itemList}>
-                {initialItems.map((item) =>
+                {thisWeekItems.map((item) =>
                   editingItemId === item.id ? (
-                    // Edit mode
+                    <div key={item.id} className={styles.addForm}>
+                      <input
+                        type='text'
+                        className={styles.inputLarge}
+                        placeholder='Item name'
+                        value={editItemName}
+                        onChange={(e) => setEditItemName(e.target.value)}
+                        autoFocus
+                      />
+                      <div className={styles.addFormRow}>
+                        <select
+                          className={styles.inputMedium}
+                          value={editItemQuantity}
+                          onChange={(e) => setEditItemQuantity(e.target.value)}
+                        >
+                          <option value=''>How many?</option>
+                          {Array.from({ length: 10 }, (_, i) => i + 1).map(
+                            (n) => (
+                              <option key={n} value={String(n)}>
+                                {n}
+                              </option>
+                            ),
+                          )}
+                        </select>
+                      </div>
+                      <textarea
+                        className={styles.textareaMedium}
+                        placeholder='Notes (optional)'
+                        value={editItemNotes}
+                        onChange={(e) => setEditItemNotes(e.target.value)}
+                        rows={2}
+                      />
+                      <div className={styles.addFormActions}>
+                        <button
+                          type='button'
+                          className={styles.cancelBtn}
+                          onClick={cancelEditItem}
+                          disabled={savingItem}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type='button'
+                          className={styles.addBtn}
+                          onClick={saveEditItem}
+                          disabled={savingItem || !editItemName.trim()}
+                        >
+                          {savingItem ? "Saving..." : "Save"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div key={item.id} className={styles.itemCard}>
+                      <div className={styles.itemInfo}>
+                        <p className={styles.itemName}>{item.name}</p>
+                        {item.quantity && (
+                          <p className={styles.itemMeta}>
+                            Qty: {item.quantity}
+                          </p>
+                        )}
+                        {item.notes && (
+                          <p className={styles.itemMeta}>{item.notes}</p>
+                        )}
+                        {item.addedBy && (
+                          <p className={styles.itemAddedBy}>
+                            Added by {item.addedBy}
+                          </p>
+                        )}
+                      </div>
+                      <div className={styles.itemActions}>
+                        <button
+                          type='button'
+                          className={styles.editBtn}
+                          onClick={() => startEditItem(item)}
+                          aria-label={`Edit ${item.name}`}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type='button'
+                          className={styles.removeBtn}
+                          onClick={() => requestRemoveItem(item)}
+                          aria-label={`Remove ${item.name}`}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ),
+                )}
+              </div>
+            )}
+          </section>
+
+          {/* Saved for later */}
+          {savedForLaterItems.length > 0 && (
+            <section className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>Saved for later</h2>
+                <span className={styles.itemCount}>
+                  {savedForLaterItems.length}{" "}
+                  {savedForLaterItems.length === 1 ? "item" : "items"}
+                </span>
+              </div>
+
+              <p className={styles.listContext}>
+                Added before the list was finalized — we&apos;ll roll these over
+                to the next shop.
+              </p>
+
+              <div className={styles.itemList}>
+                {savedForLaterItems.map((item) =>
+                  editingItemId === item.id ? (
                     <div key={item.id} className={styles.addForm}>
                       <input
                         type='text'
@@ -578,7 +705,6 @@ export default function MyCirclePage({
                       </div>
                     </div>
                   ) : (
-                    // View mode
                     <div key={item.id} className={styles.itemCard}>
                       <div className={styles.itemInfo}>
                         <p className={styles.itemName}>{item.name}</p>
@@ -618,8 +744,8 @@ export default function MyCirclePage({
                   ),
                 )}
               </div>
-            )}
-          </section>
+            </section>
+          )}
 
           {/* Prescription Pickups */}
           <section className={styles.section}>
@@ -641,7 +767,6 @@ export default function MyCirclePage({
               <div className={styles.rxList}>
                 {initialPrescriptions.map((rx) =>
                   editingRxId === rx.id ? (
-                    // Edit mode
                     <div key={rx.id} className={styles.addForm}>
                       <input
                         type='text'
@@ -698,7 +823,6 @@ export default function MyCirclePage({
                       </div>
                     </div>
                   ) : (
-                    // View mode
                     <div key={rx.id} className={styles.rxCard}>
                       <div className={styles.rxInfo}>
                         <p className={styles.rxName}>{rx.medicationName}</p>

@@ -17,6 +17,7 @@
   align-items: center;
   justify-content: center;
   background-color: var(--purple);
+  flex-shrink: 0;
 }
 
 .circle::before {
@@ -119,11 +120,17 @@
   animation: pulse 1.5s infinite ease-in-out;
 }
 
-
 .purple2Dot {
   background-color: var(--purple2);
 }
 
 .purple2 {
   color: var(--purple2);
+}
+
+@media screen and (max-width: 568px) {
+  .span {
+    text-align: left;
+    line-height: 1.3;
+  }
 }
