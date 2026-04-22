@@ -272,11 +272,12 @@ model CareCircle {
 // =========================
 
 model CircleMembership {
-  id       String     @id @default(cuid())
-  userId   String
-  circleId String
-  role     CircleRole
-  active   Boolean    @default(true)
+  id         String     @id @default(cuid())
+  userId     String
+  circleId   String
+  role       CircleRole
+  active     Boolean    @default(true)
+  inRotation Boolean    @default(true)
 
   // Tracking
   shiftsCompleted Int       @default(0)
