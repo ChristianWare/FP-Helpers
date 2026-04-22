@@ -493,10 +493,11 @@ model Prescription {
   defaultPharmacyId String?
   defaultPharmacy   Pharmacy? @relation(fields: [defaultPharmacyId], references: [id], onDelete: SetNull)
 
-  typicalRefillDays Int? // e.g. 30
-  lastPickupDate    DateTime?
-  notes             String?   @db.Text
-  active            Boolean   @default(true)
+  typicalRefillDays   Int? // e.g. 30
+  lastPickupDate      DateTime?
+  notes               String?   @db.Text
+  active              Boolean   @default(true)
+  needsPickupThisWeek Boolean   @default(false)
 
   pickups PrescriptionPickup[]
 
