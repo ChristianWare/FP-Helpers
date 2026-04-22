@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // actions/circles/createCircle.ts
 "use server";
 
-import { auth, signIn } from "../../../auth";
+import { auth } from "../../../auth";
 import { db } from "@/lib/db";
 import {
   CreateCircleSchema,
@@ -12,6 +11,8 @@ import { generateToken } from "@/lib/tokens";
 import { getUserByEmail } from "@/lib/user";
 import { Resend } from "resend";
 import { buildCircleWelcomeEmail } from "@/lib/emails/circleWelcome";
+import bcryptjs from "bcryptjs";
+import { revalidatePath } from "next/cache";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -36,6 +37,7 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
     recipientLastName,
     recipientEmail,
     recipientPhone,
+    recipientPassword,
     address,
     accessNotes,
     rotationDayOfWeek,
@@ -63,7 +65,6 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
 
   // 6. Do all the database writes in a single transaction
   let circleId: string;
-  let recipientId: string;
 
   try {
     const result = await db.$transaction(async (tx) => {
@@ -72,14 +73,16 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
       if (existingRecipient) {
         recipient = existingRecipient;
       } else {
+        const hashedPassword = await bcryptjs.hash(recipientPassword, 10);
+
         recipient = await tx.user.create({
           data: {
             firstName: recipientFirstName.trim(),
             lastName: recipientLastName.trim(),
             email: normalizedRecipientEmail,
             phone: normalizedRecipientPhone,
-            password: null, // magic-link only
-            emailVerified: new Date(), // the welcome email they'll click counts as verification
+            password: hashedPassword,
+            emailVerified: new Date(),
           },
         });
       }
@@ -128,11 +131,10 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
         },
       });
 
-      return { circleId: circle.id, recipientId: recipient.id };
+      return { circleId: circle.id };
     });
 
     circleId = result.circleId;
-    recipientId = result.recipientId;
   } catch (error) {
     console.error("[createCircle] Transaction error:", error);
     return {
@@ -140,26 +142,41 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
     };
   }
 
-  // 7. Send the welcome email to the recipient with a magic link
-  //    (only if they're a new user — existing users already have access)
+// 7. Send welcome email with login credentials (only for new users)
   if (!existingRecipient) {
     try {
-      // Trigger NextAuth's magic-link flow, which sends via our Nodemailer/Resend provider
-      await signIn("nodemailer", {
-        email: normalizedRecipientEmail,
-        redirect: false,
-        redirectTo: "/my-circle",
+      const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/login`;
+
+      const { subject, html, text } = buildCircleWelcomeEmail({
+        recipientFirstName: recipientFirstName.trim(),
+        recipientEmail: normalizedRecipientEmail,
+        recipientPassword,
+        organizerFirstName: session.user.firstName ?? "Your friend",
+        organizerLastName: session.user.lastName ?? "",
+        circleName: circleName.trim(),
+        loginUrl,
       });
+
+      const emailResult = await resend.emails.send({
+        from: process.env.EMAIL_FROM!,
+        to: normalizedRecipientEmail,
+        subject,
+        html,
+        text,
+      });
+
+      if (emailResult.error) {
+        console.error("[createCircle] Welcome email error:", emailResult.error);
+      }
     } catch (error) {
-      // Email failure shouldn't roll back circle creation — the organizer can resend later
       console.error("[createCircle] Welcome email failed:", error);
     }
-
-    // ALSO send a branded "welcome to the circle" email (different from the raw magic-link email)
-    // We use the same magic-link URL the user will get — a little redundant but gives them
-    // context about what the circle is. For now, skip this and just rely on the magic link
-    // above. We can add a proper welcome email in a later pass.
   }
+
+  // 8. Invalidate cached pages so they pick up the new circle
+  revalidatePath("/dashboard");
+  revalidatePath(`/circles/${circleId}`);
+  revalidatePath("/admin");
 
   return {
     success: true,

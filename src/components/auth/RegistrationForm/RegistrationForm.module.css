@@ -7,7 +7,7 @@
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 16px;
 }
 
 @media (max-width: 480px) {
@@ -23,21 +23,23 @@
 }
 
 .label {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
   color: #333;
 }
 
 .helpText {
-  font-size: 12px;
+  font-size: 14px;
   color: #888;
   margin-top: 2px;
+  line-height: 1.5;
+  
 }
 
 .input {
   width: 100%;
-  padding: 12px 14px;
-  font-size: 15px;
+  padding: 16px 14px;
+  font-size: 16px;
   border: 1px solid #d4d4d8;
   border-radius: 8px;
   background: #fff;
@@ -55,7 +57,7 @@
 }
 
 .fieldError {
-  font-size: 12px;
+  font-size: 16px;
   color: #dc2626;
 }
 
@@ -70,24 +72,24 @@
   transform: translateY(-50%);
   background: none;
   border: none;
-  font-size: 12px;
+  font-size: 16px;
   color: #666;
   cursor: pointer;
   padding: 4px 8px;
 }
 
 .errorBanner {
-  padding: 10px 12px;
+  padding: 10px 16px;
   background: #fef2f2;
   border: 1px solid #fecaca;
   color: #991b1b;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .submitBtn {
-  padding: 12px;
-  font-size: 15px;
+  padding: 16px;
+  font-size: 16px;
   font-weight: 600;
   background: #111;
   color: #fff;

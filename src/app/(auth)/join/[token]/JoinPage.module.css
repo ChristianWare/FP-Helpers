@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: #f7f7f8;
+  background-color: var(--tan);
 }
 
 .card {
@@ -12,17 +12,24 @@
   max-width: 480px;
   background: #fff;
   padding: 40px 32px;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 8px 24px rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
 .cardTop {
   margin-bottom: 32px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
 }
 
 .eyebrow {
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -31,15 +38,24 @@
 }
 
 .heading {
-  font-size: 22px;
+  font-size: 4rem;
   font-weight: 700;
   margin: 0 0 8px;
   color: #111;
   line-height: 1.3;
+  letter-spacing: normal;
+}
+
+.name {
+  line-height: inherit;
+  font-family: var(--BoogyBrutPoster);
+  text-transform: none;
+  letter-spacing: 0.5px;
+  color: var(--purple);
 }
 
 .subheading {
-  font-size: 14px;
+  font-size: 16px;
   color: #666;
   margin: 0;
 }

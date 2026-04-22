@@ -85,15 +85,18 @@
   padding: 24px;
   margin-bottom: 16px;
   border: 1px solid #eee;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-gap: 2rem;
 }
-
 .sectionTitle {
-  font-size: 16px;
+  font-size: 2rem;
   font-weight: 700;
   letter-spacing: normal;
-  margin: 0 0 4px;
-  color: #111;
+  padding-bottom: 0.5rem;
+  color: var(--purple);
   text-transform: uppercase;
+  border-bottom: 1px solid var(--gray);
 }
 
 .sectionSubtitle {
@@ -113,10 +116,14 @@
   border: 1px solid #e5e5e5;
   border-radius: 10px;
   padding: 8px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .shareUrl {
   flex: 1;
+  min-width: 0;
   padding: 12px;
   background: #fff;
   border: 1px solid #eee;
@@ -124,9 +131,9 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 16px;
   color: #111;
-  overflow-x: auto;
-  white-space: nowrap;
-  word-break: break-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* white-space: nowrap; */
 }
 
 .copyBtn {
@@ -186,33 +193,23 @@
   gap: 8px;
 }
 
-.memberCard {
+.sectionCard {
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  align-items: center;
-  padding: 16px 16px;
-  background: #fafafa;
-  border: 1px solid #eee;
+  align-items: flex-start;
+  gap: 2rem;
+  padding: 2rem;
+  background: var(--white);
+  border: 1px solid var(--gray);
   border-radius: 10px;
-  margin-bottom: 8px;
-}
-
-.memberCard:last-child {
-  margin-bottom: 0;
 }
 
 .memberInfo {
   flex: 1;
 }
 
-.memberName {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: normal;
-  color: #111;
-  margin: 0 0 2px;
-}
-
+.memberName,
 .memberContact {
   font-size: 16px;
   color: #888;
@@ -221,8 +218,9 @@
 
 .memberMeta {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
+  margin-top: 2rem;
 }
 
 .roleBadge {
@@ -250,6 +248,46 @@
 .emptyText {
   font-size: 15px;
   color: #888;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ——— Danger zone ——— */
+
+.dangerSection {
+  margin-top: 24px;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+}
+
+.dangerTitle {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-transform: uppercase;
+  color: #dc2626;
+  margin: 0 0 16px;
+}
+
+/* ——— Field labels inside section cards ——— */
+
+.fieldLabel {
+  display: block;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: normal;
+  font-size: 16px;
+  /* font-size: 14px;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 4px; */
+}
+
+.fieldValue {
+  font-size: 16px;
+  color: #111;
   margin: 0;
   line-height: 1.5;
 }

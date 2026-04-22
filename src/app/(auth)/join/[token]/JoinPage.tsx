@@ -6,6 +6,7 @@ import RegistrationForm from "@/components/auth/RegistrationForm/RegistrationFor
 import { joinCircle } from "@/actions/circles/joinCircle";
 import { RegisterSchemaType } from "@/schemas/RegisterSchema";
 import styles from "./JoinPage.module.css";
+import SectionHeading from "@/components/shared/SectionHeading/SectionHeading";
 
 type Props = {
   token: string;
@@ -52,11 +53,21 @@ export default function JoinPage({
     <div className={styles.page}>
       <div className={styles.card}>
         <div className={styles.cardTop}>
-          <p className={styles.eyebrow}>You&apos;ve been invited</p>
+          {/* <p className={styles.eyebrow}>You&apos;ve been invited</p> */}
+          <SectionHeading
+            title="You've been invited"
+            color='black'
+            dotColor='blackDot'
+          />
           <h1 className={styles.heading}>
-            {recipientName
-              ? `Join the circle helping ${recipientName}`
-              : `Join ${circleName}`}
+            {recipientName ? (
+              <>
+                Join the circle helping <br />{" "}
+                <span className={styles.name}>{recipientName}</span>
+              </>
+            ) : (
+              `Join ${circleName}`
+            )}
           </h1>
           <p className={styles.subheading}>
             Create your account to start helping out on the rotation.

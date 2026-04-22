@@ -5,6 +5,7 @@ import "./globals.css";
 import Nav from "@/components/shared/Nav/Nav";
 import Footerii from "@/components/shared/Footerii/Footerii";
 import SessionProvider from "@/components/shared/SessionProvider/SessionProvider";
+import ToastsProvider from "@/components/Providers/ToastsProvider";
 
 const suissReg = localFont({
   src: "../../public/fonts/SuisseRegular.ttf",
@@ -41,7 +42,11 @@ export default function RootLayout({
     >
       <body>
         <Nav />
-        <SessionProvider>{children}</SessionProvider>
+        <SessionProvider>
+          <ToastsProvider />
+          {children}
+        </SessionProvider>
+
         <Footerii />
       </body>
     </html>

@@ -14,6 +14,20 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
+  // If this user is a recipient on any circle, send them to /my-circle
+  const recipientMembership = await db.circleMembership.findFirst({
+    where: {
+      userId: session.user.id,
+      role: "RECIPIENT",
+      active: true,
+    },
+  });
+
+  if (recipientMembership) {
+    redirect("/my-circle");
+  }
+
+  // Fetch circles the user is a member of
   const memberships = await db.circleMembership.findMany({
     where: { userId: session.user.id, active: true },
     include: {
@@ -26,10 +40,6 @@ export default async function DashboardPage() {
               email: true,
               phone: true,
             },
-          },
-          memberships: {
-            where: { active: true, role: { not: "RECIPIENT" } },
-            select: { id: true },
           },
           _count: {
             select: {
@@ -107,18 +117,15 @@ export default async function DashboardPage() {
                       <div className={styles.cardHeader}>
                         <h3 className={styles.circleName}>{m.circle.name}</h3>
                         <span className={styles.roleBadge}>{m.role}</span>
-                      </div>  
+                      </div>
 
                       <div className={styles.cardRecipient}>
-                        {/* <p className={styles.recipientLabel}>Recipient</p> */}
+                        <p className={styles.recipientLabel}>Recipient</p>
                         <p className={styles.recipientName}>{recipientName}</p>
                         {r && (
-                          <>
-                            <p className={styles.recipientContact}>
-                              {formatPhone(r.phone)}
-                            </p>
-                            <p className={styles.recipientContact}>{r.email}</p>
-                          </>
+                          <p className={styles.recipientContact}>
+                            {formatPhone(r.phone)} · {r.email}
+                          </p>
                         )}
                       </div>
 

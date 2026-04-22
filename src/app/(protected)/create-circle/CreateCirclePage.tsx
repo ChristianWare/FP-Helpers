@@ -13,6 +13,8 @@ import {
 import { createCircle } from "@/actions/circles/createCircle";
 import styles from "./CreateCirclePage.module.css";
 import LayoutWrapper from "@/components/shared/LayoutWrapper";
+import toast from "react-hot-toast";
+
 
 function formatPhoneNumber(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 10);
@@ -44,7 +46,7 @@ const STEPS = [
     id: "recipient",
     title: "Who are you helping?",
     subtitle:
-      "We'll send them a link so they can share what they need each week.",
+      "Enter their info and set a password you'll share with them so they can sign in.",
     number: 2,
   },
   {
@@ -75,6 +77,8 @@ const STEP_FIELDS: Record<number, (keyof CreateCircleSchemaType)[]> = {
     "recipientLastName",
     "recipientEmail",
     "recipientPhone",
+    "recipientPassword",
+    "recipientConfirmPassword",
   ],
   2: [],
   3: ["rotationDayOfWeek", "rotationCadence"],
@@ -113,7 +117,6 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
     async (targetStep: number) => {
       if (isAnimating) return;
 
-      // If going forward, validate current step first
       if (targetStep > currentStep) {
         const fieldsToValidate = STEP_FIELDS[currentStep];
         if (fieldsToValidate && fieldsToValidate.length > 0) {
@@ -125,11 +128,9 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
       setDirection(targetStep > currentStep ? "forward" : "back");
       setIsAnimating(true);
 
-      // Small delay to let exit animation start
       setTimeout(() => {
         setCurrentStep(targetStep);
         setError(null);
-        // Let enter animation complete
         setTimeout(() => {
           setIsAnimating(false);
         }, 50);
@@ -146,13 +147,25 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
 
     if (result?.error) {
       setError(result.error);
+      toast.error(result.error);
       setLoading(false);
       return;
     }
 
     if (result?.success && result.circleId) {
-      router.push(`/circles/${result.circleId}?created=1`);
+      toast.success(`${values.circleName} is ready!`);
+      router.replace(`/circles/${result.circleId}?created=1`);
       router.refresh();
+    }
+  };
+
+  // Helper: surface validation errors if they exist on hidden steps
+  const onInvalid = (formErrors: typeof errors) => {
+    const errorFields = Object.keys(formErrors);
+    if (errorFields.length > 0) {
+      setError(
+        `Please go back and check these fields: ${errorFields.join(", ")}`,
+      );
     }
   };
 
@@ -165,17 +178,15 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
       <div className={styles.content}>
         <LayoutWrapper>
           <div className={styles.wrapper}>
-            {/* Header — always visible */}
             <header className={styles.header}>
               <Link href='/dashboard' className={styles.backLink}>
                 ← Dashboard
               </Link>
               <p className={styles.greeting}>
-                Hi {organizerFirstName} — let&apos;s set up a care circle.
+                Hi {organizerFirstName} — {"let's set up a care circle."}
               </p>
             </header>
 
-            {/* Progress bar */}
             <div className={styles.progressBar}>
               <div
                 className={styles.progressFill}
@@ -185,15 +196,13 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
               />
             </div>
 
-            {/* Step indicator */}
             <div className={styles.stepIndicator}>
               <span className={styles.stepCount}>
                 Step {step.number} of {STEPS.length}
               </span>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)}>
-              {/* Step content — animated */}
+            <form onSubmit={handleSubmit(onSubmit, onInvalid)}>
               <div className={styles.stepContainer}>
                 <div
                   className={`${styles.stepContent} ${
@@ -204,7 +213,6 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
                       : styles.enterActive
                   }`}
                 >
-                  {/* Step title */}
                   <div className={styles.stepHeader}>
                     <h1 className={styles.stepTitle}>{step.title}</h1>
                     <p className={styles.stepSubtitle}>{step.subtitle}</p>
@@ -226,7 +234,7 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
                           {...register("circleName")}
                         />
                         <span className={styles.helpText}>
-                          Usually the recipient&apos;s name works great.
+                          {"Usually the recipient's name works great."}
                         </span>
                         {errors.circleName && (
                           <span className={styles.fieldError}>
@@ -334,6 +342,55 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
                             {errors.recipientPhone.message}
                           </span>
                         )}
+                      </div>
+
+                      <div className={styles.row}>
+                        <div className={styles.field}>
+                          <label
+                            className={styles.label}
+                            htmlFor='recipientPassword'
+                          >
+                            Set a password for them
+                          </label>
+                          <input
+                            id='recipientPassword'
+                            type='password'
+                            className={`${styles.input} ${errors.recipientPassword ? styles.inputError : ""}`}
+                            placeholder='At least 8 characters'
+                            autoComplete='new-password'
+                            {...register("recipientPassword")}
+                          />
+                          <span className={styles.helpText}>
+                            {"You'll share this with them so they can sign in."}
+                          </span>
+                          {errors.recipientPassword && (
+                            <span className={styles.fieldError}>
+                              {errors.recipientPassword.message}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className={styles.field}>
+                          <label
+                            className={styles.label}
+                            htmlFor='recipientConfirmPassword'
+                          >
+                            Confirm password
+                          </label>
+                          <input
+                            id='recipientConfirmPassword'
+                            type='password'
+                            className={`${styles.input} ${errors.recipientConfirmPassword ? styles.inputError : ""}`}
+                            placeholder='Re-enter password'
+                            autoComplete='new-password'
+                            {...register("recipientConfirmPassword")}
+                          />
+                          {errors.recipientConfirmPassword && (
+                            <span className={styles.fieldError}>
+                              {errors.recipientConfirmPassword.message}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -476,8 +533,9 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
                             Add me to the rotation
                           </label>
                           <p className={styles.checkboxHint}>
-                            You&apos;ll take turns with the other helpers.
-                            Uncheck if you&apos;re just organizing.
+                            {
+                              "You'll take turns with the other helpers. Uncheck if you're just organizing."
+                            }
                           </p>
                         </div>
                       </div>
@@ -486,14 +544,12 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
                 </div>
               </div>
 
-              {/* Error */}
               {error && (
                 <div className={styles.errorBanner}>
                   <span>{error}</span>
                 </div>
               )}
 
-              {/* Navigation */}
               <div className={styles.actions}>
                 {isFirstStep ? (
                   <Link href='/dashboard' className={styles.navBtnSecondary}>

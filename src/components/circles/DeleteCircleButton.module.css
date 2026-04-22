@@ -1,0 +1,116 @@
+/* components/circles/DeleteCircleButton.module.css */
+
+.deleteBtn {
+  padding: 14px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: #dc2626;
+  background: none;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.deleteBtn:hover {
+  background: #fef2f2;
+  border-color: #dc2626;
+}
+
+/* ——— Modal content ——— */
+
+.modalContent {
+  text-align: center;
+  padding: 16px 0;
+}
+
+.modalIcon {
+  font-size: 40px;
+  margin-bottom: 16px;
+}
+
+.modalTitle {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: #111;
+  margin: 0 0 12px;
+}
+
+.modalText {
+  font-size: 15px;
+  color: #666;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+.modalError {
+  padding: 10px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.modalActions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.modalCancel {
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: #555;
+  background: none;
+  border: 1px solid #d4d4d8;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex: 1;
+}
+
+.modalCancel:hover:not(:disabled) {
+  border-color: #111;
+  color: #111;
+}
+
+.modalCancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modalConfirm {
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: #fff;
+  background: #dc2626;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  flex: 1;
+}
+
+.modalConfirm:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.modalConfirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media screen and (max-width: 568px) {
+  .modalActions {
+    grid-template-columns: 1fr;
+  }
+}

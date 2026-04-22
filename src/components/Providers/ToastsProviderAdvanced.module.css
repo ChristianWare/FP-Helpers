@@ -1,0 +1,118 @@
+/* ToastsProviderAdvanced.css */
+
+/* Custom toast styling */
+.customToast {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  --toast-duration: 4000ms; /* Default duration */
+}
+
+/* Progress bar that shrinks from right to left */
+.customToast::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(to right, #6b7280, #4b5563);
+  transform-origin: right;
+  animation: shrink-progress var(--toast-duration, 4000ms) linear forwards;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* Success toast - green progress bar */
+.customToast[data-type="success"]::before {
+  background: linear-gradient(to right, #10b981, #059669);
+}
+
+/* Error toast - red progress bar */
+.customToast[data-type="error"]::before {
+  background: linear-gradient(to right, #ef4444, #dc2626);
+}
+
+/* Loading toast - blue progress bar with infinite animation */
+.customToast[data-type="loading"]::before {
+  background: linear-gradient(to right, #3b82f6, #2563eb);
+  animation: loading-pulse 1.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* Blank/default toast - gray progress bar */
+.customToast[data-type="blank"]::before {
+  background: linear-gradient(to right, #6b7280, #4b5563);
+}
+
+/* Animation that shrinks the progress bar from right to left */
+@keyframes shrink-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* Loading animation - pulsing effect */
+@keyframes loading-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scaleX(0.95);
+  }
+}
+
+/* Pause animation on hover */
+.customToast:hover::before {
+  animation-play-state: paused;
+}
+
+/* Make sure the toast content doesn't overlap with progress bar */
+.customToast > div {
+  position: relative;
+  z-index: 1;
+}
+
+/* Optional: Add entrance animation */
+.customToast {
+  animation: toast-enter 0.3s ease-out;
+}
+
+@keyframes toast-enter {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Optional: Different progress bar colors for different toast types */
+.customToast[data-type="success"]::before {
+  background: linear-gradient(to right, #10b981, #059669);
+}
+
+.customToast[data-type="error"]::before {
+  background: linear-gradient(to right, #ef4444, #dc2626);
+}
+
+.customToast[data-type="loading"]::before {
+  background: linear-gradient(90deg, #3b82f6, #2563eb, #3b82f6);
+  background-size: 200% 100%;
+  animation: loading-gradient 1.5s ease infinite;
+}
+
+@keyframes loading-gradient {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 200% 0%;
+  }
+}

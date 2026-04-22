@@ -5,7 +5,9 @@ import { useState } from "react";
 import Link from "next/link";
 import styles from "./CirclePage.module.css";
 import LayoutWrapper from "@/components/shared/LayoutWrapper";
-import { formatPhone } from "@/lib/format"; 
+import { formatPhone } from "@/lib/format";
+import DeleteCircleButton from "@/components/circles/DeleteCircleButton";
+import Confetti from "@/components/shared/Confetti/Confetti";
 
 const DAYS_OF_WEEK = [
   "Sunday",
@@ -89,16 +91,22 @@ export default function CirclePage({
             </header>
 
             {justCreated && (
-              <div className={styles.successBanner}>
-                <div className={styles.successIcon}>🎉</div>
-                <div>
-                  <h2 className={styles.successTitle}>Your circle is ready</h2>
-                  <p className={styles.successText}>
-                    We&apos;ve sent {recipient?.firstName} a sign-in link by
-                    email. Now invite your friends by sharing the link below.
-                  </p>
+              <>
+                <Confetti />
+                <div className={styles.successBanner}>
+                  <div className={styles.successIcon}>🎉</div>
+                  <div>
+                    <h2 className={styles.successTitle}>
+                      Your circle is ready
+                    </h2>
+                    <p className={styles.successText}>
+                      We&apos;ve sent {recipient?.firstName} their sign-in
+                      details by email. Now invite your friends by sharing the
+                      link below.
+                    </p>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
 
             {/* Share link section */}
@@ -110,61 +118,77 @@ export default function CirclePage({
                   sign up and join the rotation.
                 </p>
 
-                <div className={styles.shareBox}>
-                  <code className={styles.shareUrl}>{joinUrl}</code>
-                  <button
-                    type='button'
-                    className={styles.copyBtn}
-                    onClick={copyJoinLink}
-                  >
-                    {copied ? "Copied!" : "Copy"}
-                  </button>
-                </div>
+                {/* <div className={styles.sectionCard}> */}
+                  <div>
+                    <span className={styles.fieldLabel}>Shareable link</span>
+                    <div className={styles.shareBox}>
+                      <code className={styles.shareUrl}>{joinUrl}</code>
+                      <button
+                        type='button'
+                        className={styles.copyBtn}
+                        onClick={copyJoinLink}
+                      >
+                        {copied ? "Copied!" : "Copy"}
+                      </button>
+                    </div>
+                  </div>
+                {/* </div> */}
               </section>
             )}
 
             {/* Schedule info */}
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>Schedule</h2>
-              <dl className={styles.detailList}>
-                <div className={styles.detailRow}>
-                  <dt>Day</dt>
-                  <dd>
+              <div className={styles.sectionCard}>
+                <div>
+                  <span className={styles.fieldLabel}>Day</span>
+                  <p className={styles.fieldValue}>
                     {DAYS_OF_WEEK[circle.rotationDayOfWeek]}
                     {circle.rotationCadence === "BIWEEKLY"
                       ? " (every other week)"
                       : ""}
-                  </dd>
+                  </p>
                 </div>
+
                 {circle.typicalArrivalTime && (
-                  <div className={styles.detailRow}>
-                    <dt>Arrival time</dt>
-                    <dd>{circle.typicalArrivalTime}</dd>
+                  <div>
+                    <span className={styles.fieldLabel}>Arrival time</span>
+                    <p className={styles.fieldValue}>
+                      {circle.typicalArrivalTime}
+                    </p>
                   </div>
                 )}
+
                 {circle.address && (
-                  <div className={styles.detailRow}>
-                    <dt>Address</dt>
-                    <dd>{circle.address}</dd>
+                  <div>
+                    <span className={styles.fieldLabel}>Address</span>
+                    <p className={styles.fieldValue}>{circle.address}</p>
                   </div>
                 )}
-              </dl>
+              </div>
             </section>
 
             {/* Recipient */}
             {recipient && (
               <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>Recipient</h2>
-                <div className={styles.memberCard}>
-                  <div className={styles.memberInfo}>
+                <div className={styles.sectionCard}>
+                  <div>
+                    <span className={styles.fieldLabel}>Name</span>
                     <p className={styles.memberName}>
                       {recipient.firstName} {recipient.lastName}
                     </p>
+                  </div>
+                  <div>
+                    <span className={styles.fieldLabel}>Email</span>
+                    <p className={styles.memberContact}>{recipient.email}</p>
+                  </div>
+                  <div>
+                    <span className={styles.fieldLabel}>Phone number</span>
                     <p className={styles.memberContact}>
-                      {recipient.email} · {formatPhone(recipient.phone)}
+                      {formatPhone(recipient.phone)}
                     </p>
                   </div>
-                  <span className={styles.roleBadge}>Recipient</span>
                 </div>
               </section>
             )}
@@ -181,28 +205,50 @@ export default function CirclePage({
               ) : (
                 <div className={styles.memberList}>
                   {helpers.map((m) => (
-                    <div key={m.id} className={styles.memberCard}>
-                      <div className={styles.memberInfo}>
+                    <div key={m.id} className={styles.sectionCard}>
+                      <div>
+                        <span className={styles.fieldLabel}>Name</span>
                         <p className={styles.memberName}>
                           {m.user.firstName} {m.user.lastName}
                         </p>
+                      </div>
+                      <div>
+                        <span className={styles.fieldLabel}>Email</span>
+                        <p className={styles.memberContact}>{m.user.email}</p>
+                      </div>
+                      <div>
+                        <span className={styles.fieldLabel}>Phone number</span>
                         <p className={styles.memberContact}>
-                          {m.user.email} · {formatPhone(m.user.phone)}
+                          {formatPhone(m.user.phone)}
                         </p>
                       </div>
-                      <div className={styles.memberMeta}>
-                        <span className={styles.roleBadge}>{m.role}</span>
-                        {m.inRotation && (
-                          <span className={styles.rotationBadge}>
-                            In rotation
-                          </span>
-                        )}
+                      <div>
+                        <span className={styles.fieldLabel}>Role</span>
+                        <div className={styles.memberMeta}>
+                          <span className={styles.roleBadge}>{m.role}</span>
+                          {m.inRotation && (
+                            <span className={styles.rotationBadge}>
+                              In rotation
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
             </section>
+
+            {/* Danger zone — admin only */}
+            {isAdmin && (
+              <section className={styles.dangerSection}>
+                <h2 className={styles.dangerTitle}>Danger zone</h2>
+                <DeleteCircleButton
+                  circleId={circle.id}
+                  circleName={circle.name}
+                />
+              </section>
+            )}
           </div>
         </LayoutWrapper>
       </div>
