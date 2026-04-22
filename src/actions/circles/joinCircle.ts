@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { getUserByEmail } from "@/lib/user";
 import { RegisterSchema, RegisterSchemaType } from "@/schemas/RegisterSchema";
 import { signIn } from "../../../auth";
+import { ensureShiftsForCircle } from "@/lib/shifts/generateShifts";
 import bcryptjs from "bcryptjs";
 import { AuthError } from "next-auth";
 
@@ -58,14 +59,39 @@ export const joinCircle = async (token: string, values: RegisterSchemaType) => {
       },
     });
 
+    // Find the highest rotation order in this circle so the new helper
+    // slots in at the end of the rotation
+    const lastOrder = await tx.circleMembership.findFirst({
+      where: {
+        circleId: joinLink.circleId,
+        rotationOrder: { gte: 0 },
+      },
+      orderBy: { rotationOrder: "desc" },
+      select: { rotationOrder: true },
+    });
+    const nextOrder = (lastOrder?.rotationOrder ?? -1) + 1;
+
     await tx.circleMembership.create({
       data: {
         userId: user.id,
         circleId: joinLink.circleId,
         role: joinLink.role,
+        inRotation: joinLink.role === "HELPER" || joinLink.role === "ADMIN",
+        rotationOrder:
+          joinLink.role === "HELPER" || joinLink.role === "ADMIN"
+            ? nextOrder
+            : -1,
       },
     });
   });
+
+  // Extend the shift schedule to pick up the new helper
+  // (existing shifts stay as-is; future shifts include them)
+  try {
+    await ensureShiftsForCircle(joinLink.circleId);
+  } catch (err) {
+    console.error("[joinCircle] Failed to regenerate shifts:", err);
+  }
 
   // Auto-sign-in
   try {

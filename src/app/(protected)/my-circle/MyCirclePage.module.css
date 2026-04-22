@@ -1,25 +1,25 @@
 /* app/(protected)/my-circle/MyCirclePage.module.css */
 
 .container {
+  margin: 0 auto;
+  padding-top: 5rem;
   min-height: 100vh;
   background-color: var(--tan);
-  padding-top: 7rem;
 }
 
-.wrapper {
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-/* ——— Header ——— */
+/* ——— Header (matches dashboard) ——— */
 
 .header {
-  margin-bottom: 32px;
-  padding-bottom: 24px;
-  border-bottom: 2px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+  gap: 16px;
+  border-bottom: 1px solid var(--gray2);
+  padding-bottom: 1rem;
 }
 
-.greeting {
+.title {
   font-size: 10rem;
   font-family: var(--BoogyBrutPoster);
   text-transform: none;
@@ -27,60 +27,55 @@
   color: var(--purple);
 }
 
-.circleName {
-  font-size: 18px;
-  color: #666;
-  margin: 0;
+@media screen and (max-width: 568px) {
+  .title {
+    font-size: 6rem;
+  }
 }
 
-/* ——— Helpers section ——— */
-
-.helpersSection {
-  margin-bottom: 32px;
+.subtitle {
+  font-size: 16px;
+  color: var(--purple);
+  margin: 0 0 2rem;
 }
 
-.helperList {
+.signOutBtn {
+  padding: 8px 16px;
+  background: none;
+  border: 1px solid var(--purple);
+  border-radius: 6px;
+  color: var(--purple);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.signOutBtn:hover {
+  background-color: var(--purple);
+  color: var(--tan);
+}
+
+.accountInfo {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: flex-end;
+  gap: 6px;
 }
 
-.helperCard {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 16px;
-  background: #f0f7ff;
-  border: 1px solid #dbeafe;
-  border-radius: 12px;
-}
-
-.helperName {
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: normal;
-  color: #111;
+.userEmail {
+  font-size: 16px;
+  color: #888;
   margin: 0;
-}
-
-.helperPhone {
-  font-size: 18px;
-  font-weight: 600;
   letter-spacing: normal;
-  color: #1e40af;
-  text-decoration: none;
-}
-
-.helperPhone:hover {
-  text-decoration: underline;
 }
 
 /* ——— Sections ——— */
 
 .section {
-  margin-bottom: 40px;
+  margin-bottom: 2rem;
   padding: 24px;
-  background: #fafafa;
+  background: #fff;
   border: 1px solid #eee;
   border-radius: 16px;
 }
@@ -96,7 +91,8 @@
   font-size: 22px;
   font-weight: 700;
   letter-spacing: normal;
-  color: #111;
+  color: var(--purple);
+  text-transform: uppercase;
   margin: 0;
 }
 
@@ -110,9 +106,158 @@
   background: #fef2f2;
   color: #dc2626;
   border-radius: 20px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: normal;
+}
+
+/* ——— This week banner ——— */
+
+.thisWeekBanner {
+  background: var(--purple);
+  color: var(--tan);
+  padding: 32px 28px;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+}
+
+.thisWeekLabel, .thisWeekDate {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 10px;
+  color: var(--white);
+}
+
+.thisWeekHelper {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: normal;
+  line-height: 1.2;
+  margin: 0 0 8px;
+  color: var(--tan);
+}
+
+.thisWeekDate {
+ 
+  margin: 0 0 20px;
+  color: var(--white);
+
+}
+
+.thisWeekPhone {
+  display: inline-block;
+  padding: 12px 22px;
+  background: var(--tan);
+  color: var(--purple);
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.thisWeekPhone:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 480px) {
+  .thisWeekBanner {
+    padding: 24px 20px;
+  }
+
+  .thisWeekHelper {
+    font-size: 24px;
+  }
+}
+
+/* ——— Upcoming shifts ——— */
+
+.shiftList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shiftRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 14px 16px;
+  background: #fafafa;
+  border: 1px solid var(--gray);
+  border-radius: 10px;
+  align-items: center;
+}
+
+.shiftDate {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: #111;
+}
+
+.shiftHelper {
+  font-size: 16px;
+  color: var(--black);
+  text-align: right;
+}
+
+@media (max-width: 480px) {
+  .shiftRow {
+    padding: 12px 14px;
+  }
+
+  .shiftDate,
+  .shiftHelper {
+    font-size: 15px;
+  }
+}
+
+/* ——— Helpers list ——— */
+
+.helperList {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 568px) {
+  .helperList {
+    grid-template-columns: 1fr;
+  }
+}
+
+.helperCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  background: #fafafa;
+  border: 1px solid var(--gray);
+  border-radius: 10px;
+}
+
+.helperName {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: #111;
+  margin: 0;
+}
+
+.helperPhone {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: var(--purple);
+  text-decoration: none;
+}
+
+.helperPhone:hover {
+  text-decoration: underline;
 }
 
 /* ——— Add item trigger ——— */
@@ -123,9 +268,9 @@
   font-size: 18px;
   font-weight: 600;
   letter-spacing: normal;
-  color: #111;
-  background: #fff;
-  border: 2px dashed #d4d4d8;
+  color: var(--purple);
+  background: #fafafa;
+  border: 2px dashed var(--purple);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -133,8 +278,9 @@
 }
 
 .addItemTrigger:hover {
-  border-color: #111;
-  background: #f9f9f9;
+  background: var(--purple);
+  color: var(--tan);
+  border-style: solid;
 }
 
 /* ——— Add form ——— */
@@ -144,8 +290,8 @@
   flex-direction: column;
   gap: 12px;
   padding: 20px;
-  background: #fff;
-  border: 1px solid #eee;
+  background: #fafafa;
+  border: 1px solid var(--gray);
   border-radius: 12px;
   margin-bottom: 16px;
 }
@@ -173,7 +319,7 @@
   width: 100%;
   padding: 16px;
   font-size: 20px;
-  border: 2px solid #d4d4d8;
+  border: 2px solid var(--gray);
   border-radius: 12px;
   background: #fff;
   color: #111;
@@ -183,14 +329,14 @@
 
 .inputLarge:focus {
   outline: none;
-  border-color: #111;
+  border-color: var(--purple);
 }
 
 .inputMedium {
   width: 100%;
   padding: 14px;
   font-size: 16px;
-  border: 1px solid #d4d4d8;
+  border: 1px solid var(--gray);
   border-radius: 10px;
   background: #fff;
   color: #111;
@@ -200,14 +346,14 @@
 
 .inputMedium:focus {
   outline: none;
-  border-color: #111;
+  border-color: var(--purple);
 }
 
 .textareaMedium {
   width: 100%;
   padding: 14px;
   font-size: 16px;
-  border: 1px solid #d4d4d8;
+  border: 1px solid var(--gray);
   border-radius: 10px;
   background: #fff;
   color: #111;
@@ -219,7 +365,7 @@
 
 .textareaMedium:focus {
   outline: none;
-  border-color: #111;
+  border-color: var(--purple);
 }
 
 .addBtn {
@@ -227,16 +373,16 @@
   font-size: 16px;
   font-weight: 700;
   letter-spacing: normal;
-  background: #111;
-  color: #fff;
+  background: var(--purple);
+  color: var(--tan);
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: opacity 0.15s ease;
 }
 
 .addBtn:hover:not(:disabled) {
-  background: #000;
+  opacity: 0.9;
 }
 
 .addBtn:disabled {
@@ -249,17 +395,17 @@
   font-size: 16px;
   font-weight: 600;
   letter-spacing: normal;
-  color: #666;
+  color: var(--purple);
   background: none;
-  border: 1px solid #d4d4d8;
+  border: 1px solid var(--purple);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .cancelBtn:hover {
-  border-color: #111;
-  color: #111;
+  background: var(--purple);
+  color: var(--tan);
 }
 
 /* ——— Item list ——— */
@@ -276,14 +422,14 @@
   align-items: flex-start;
   gap: 12px;
   padding: 16px;
-  background: #fff;
-  border: 1px solid #eee;
+  background: #fafafa;
+  border: 1px solid var(--gray);
   border-radius: 12px;
   transition: border-color 0.15s ease;
 }
 
 .itemCard:hover {
-  border-color: #d4d4d8;
+  border-color: var(--purple);
 }
 
 .itemInfo {
@@ -299,14 +445,14 @@
 }
 
 .itemMeta {
-  font-size: 15px;
-  color: #666;
+  font-size: 16px;
+  color: var(--black);
   margin: 0 0 2px;
   line-height: 1.4;
 }
 
 .itemAddedBy {
-  font-size: 14px;
+  font-size: 16px;
   color: #aaa;
   margin: 4px 0 0;
 }
@@ -314,16 +460,14 @@
 /* ——— Remove button ——— */
 
 .removeBtn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  color: #999;
+  padding: 8px 14px;
   font-size: 16px;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: #dc2626;
+  background: none;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
   cursor: pointer;
   flex-shrink: 0;
   transition: all 0.15s ease;
@@ -331,8 +475,7 @@
 
 .removeBtn:hover {
   background: #fef2f2;
-  border-color: #fecaca;
-  color: #dc2626;
+  border-color: #dc2626;
 }
 
 /* ——— Prescription list ——— */
@@ -349,14 +492,14 @@
   gap: 14px;
   align-items: flex-start;
   padding: 16px;
-  background: #fff;
-  border: 1px solid #eee;
+  background: #fafafa;
+  border: 1px solid var(--gray);
   border-radius: 12px;
   transition: border-color 0.15s ease;
 }
 
 .rxCard:hover {
-  border-color: #d4d4d8;
+  border-color: var(--purple);
 }
 
 .rxCheckbox {
@@ -368,7 +511,7 @@
   width: 22px;
   height: 22px;
   cursor: pointer;
-  accent-color: #111;
+  accent-color: var(--purple);
 }
 
 .rxInfo {
@@ -386,13 +529,13 @@
 }
 
 .rxPharmacy {
-  font-size: 15px;
+  font-size: 16px;
   color: #666;
   margin: 0 0 2px;
 }
 
 .rxNotes {
-  font-size: 15px;
+  font-size: 16px;
   color: #888;
   margin: 0 0 4px;
   line-height: 1.4;
@@ -405,7 +548,7 @@
   background: #fef2f2;
   color: #dc2626;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: normal;
 }
@@ -419,4 +562,64 @@
   margin: 0 0 16px;
   text-align: center;
   padding: 20px 0;
+}
+
+/* ——— Responsive ——— */
+
+@media screen and (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3rem;
+    text-align: center;
+  }
+
+  .title,
+  .subtitle {
+    margin: 0;
+    text-align: center;
+  }
+
+  .accountInfo {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    width: 100%;
+  }
+
+  .userEmail {
+    order: -1;
+  }
+
+  .signOutBtn {
+    padding: 6px 12px;
+    font-size: 16px;
+  }
+}
+
+/* ——— Item / Rx action buttons ——— */
+
+.itemActions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.editBtn {
+  padding: 8px 14px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: var(--purple);
+  background: none;
+  border: 1px solid var(--purple);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.editBtn:hover {
+  background: var(--purple);
+  color: var(--tan);
 }

@@ -4,6 +4,7 @@
 import { auth } from "../../../auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 
 const AddItemSchema = z.object({
   circleId: z.string().min(1),
@@ -42,6 +43,8 @@ export async function addGroceryItem(values: {
       status: "PENDING",
     },
   });
+
+  revalidatePath("/my-circle");
 
   return { success: true, item };
 }

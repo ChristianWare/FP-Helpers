@@ -3,15 +3,18 @@
 
 import { auth } from "../../../auth";
 import { db } from "@/lib/db";
+import { revalidatePath } from "next/cache";
 
 export async function updateGroceryItem(values: {
   itemId: string;
-  name?: string;
+  name: string;
   quantity?: string;
   notes?: string;
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not signed in" };
+
+  if (!values.name.trim()) return { error: "Item name is required" };
 
   const item = await db.groceryItem.findUnique({
     where: { id: values.itemId },
@@ -29,11 +32,13 @@ export async function updateGroceryItem(values: {
   await db.groceryItem.update({
     where: { id: values.itemId },
     data: {
-      name: values.name?.trim() ?? item.name,
-      quantity: values.quantity?.trim() ?? item.quantity,
-      notes: values.notes?.trim() ?? item.notes,
+      name: values.name.trim(),
+      quantity: values.quantity?.trim() || null,
+      notes: values.notes?.trim() || null,
     },
   });
+
+  revalidatePath("/my-circle");
 
   return { success: true };
 }

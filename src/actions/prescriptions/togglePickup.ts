@@ -1,8 +1,9 @@
 // actions/prescriptions/togglePickup.ts
 "use server";
 
-import { auth } from "../../../auth"; 
+import { auth } from "../../../auth";
 import { db } from "@/lib/db";
+import { revalidatePath } from "next/cache";
 
 export async function togglePickup(prescriptionId: string) {
   const session = await auth();
@@ -28,6 +29,8 @@ export async function togglePickup(prescriptionId: string) {
     where: { id: prescriptionId },
     data: { needsPickupThisWeek: !prescription.needsPickupThisWeek },
   });
+
+  revalidatePath("/my-circle");
 
   return { success: true };
 }

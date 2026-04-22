@@ -142,7 +142,7 @@ export default function CirclePage({
               <div className={styles.sectionCard}>
                 <div>
                   <span className={styles.fieldLabel}>Day</span>
-                  <p className={styles.fieldValue}>
+                  <p className={styles.memberName}>
                     {DAYS_OF_WEEK[circle.rotationDayOfWeek]}
                     {circle.rotationCadence === "BIWEEKLY"
                       ? " (every other week)"
@@ -153,7 +153,7 @@ export default function CirclePage({
                 {circle.typicalArrivalTime && (
                   <div>
                     <span className={styles.fieldLabel}>Arrival time</span>
-                    <p className={styles.fieldValue}>
+                    <p className={styles.memberName}>
                       {circle.typicalArrivalTime}
                     </p>
                   </div>
@@ -162,7 +162,7 @@ export default function CirclePage({
                 {circle.address && (
                   <div>
                     <span className={styles.fieldLabel}>Address</span>
-                    <p className={styles.fieldValue}>{circle.address}</p>
+                    <p className={styles.memberName}>{circle.address}</p>
                   </div>
                 )}
               </div>

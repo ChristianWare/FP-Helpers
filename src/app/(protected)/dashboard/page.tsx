@@ -7,6 +7,7 @@ import styles from "./DashboardPage.module.css";
 import LayoutWrapper from "@/components/shared/LayoutWrapper";
 import Button from "@/components/shared/Button/Button";
 import { formatPhone } from "@/lib/format";
+import SectionHeading from "@/components/shared/SectionHeading/SectionHeading";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -60,12 +61,7 @@ export default async function DashboardPage() {
         <LayoutWrapper>
           <header className={styles.header}>
             <div>
-              <h1 className={styles.title}>Hi {session.user.firstName} 👋</h1>
-              <p className={styles.subtitle}>
-                {memberships.length === 0
-                  ? "Let's get you started."
-                  : `You're part of ${memberships.length} ${memberships.length === 1 ? "circle" : "circles"}.`}
-              </p>
+              <h1 className={styles.title}>Hi {session.user.firstName}</h1>
             </div>
             <div className={styles.accountInfo}>
               <form
@@ -81,7 +77,20 @@ export default async function DashboardPage() {
               <p className={styles.userEmail}>{session.user.email}</p>
             </div>
           </header>
-
+          <div className={styles.subtitle}>
+            <SectionHeading
+              title={
+                memberships.length === 0
+                  ? "Let's get you started."
+                  : `You're part of ${memberships.length} ${memberships.length === 1 ? "circle" : "circles"}.`
+              }
+              color='black'
+              dotColor='purpleDot'
+            />
+            {/* {memberships.length === 0
+              ? "Let's get you started."
+              : `You're part of ${memberships.length} ${memberships.length === 1 ? "circle" : "circles"}.`} */}
+          </div>
           {memberships.length === 0 ? (
             <div className={styles.emptyState}>
               <div className={styles.emptyIcon}>🤝</div>
@@ -123,9 +132,12 @@ export default async function DashboardPage() {
                         <p className={styles.recipientLabel}>Recipient</p>
                         <p className={styles.recipientName}>{recipientName}</p>
                         {r && (
-                          <p className={styles.recipientContact}>
-                            {formatPhone(r.phone)} · {r.email}
-                          </p>
+                          <>
+                            <p className={styles.recipientContact}>
+                              {formatPhone(r.phone)}
+                            </p>
+                            <p className={styles.recipientContact}>{r.email}</p>
+                          </>
                         )}
                       </div>
 

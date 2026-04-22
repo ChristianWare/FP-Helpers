@@ -4,6 +4,7 @@
 import { auth } from "../../../auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 
 const AddPrescriptionSchema = z.object({
   circleId: z.string().min(1),
@@ -84,6 +85,8 @@ export async function addPrescription(values: {
       needsPickupThisWeek: false,
     },
   });
+
+  revalidatePath("/my-circle");
 
   return { success: true, prescription };
 }

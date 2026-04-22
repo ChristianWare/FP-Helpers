@@ -279,6 +279,10 @@ model CircleMembership {
   active     Boolean    @default(true)
   inRotation Boolean    @default(true)
 
+  // Stable position in the rotation order (0, 1, 2, ...)
+  // Helpers go round-robin in ascending order of this value
+  rotationOrder Int @default(0)
+
   // Tracking
   shiftsCompleted Int       @default(0)
   lastActiveAt    DateTime?
@@ -292,6 +296,7 @@ model CircleMembership {
   @@index([circleId])
   @@index([userId])
   @@index([role])
+  @@index([rotationOrder])
 }
 
 // =========================

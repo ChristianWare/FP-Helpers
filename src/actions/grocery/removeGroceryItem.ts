@@ -3,6 +3,7 @@
 
 import { auth } from "../../../auth";
 import { db } from "@/lib/db";
+import { revalidatePath } from "next/cache";
 
 export async function removeGroceryItem(itemId: string) {
   const session = await auth();
@@ -27,6 +28,8 @@ export async function removeGroceryItem(itemId: string) {
     where: { id: itemId },
     data: { status: "REMOVED" },
   });
+
+  revalidatePath("/my-circle");
 
   return { success: true };
 }

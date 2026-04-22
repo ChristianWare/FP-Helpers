@@ -2,16 +2,37 @@
 // app/(protected)/my-circle/MyCirclePage.tsx
 "use client";
 
+import styles from "./MyCirclePage.module.css";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import styles from "./MyCirclePage.module.css";
+import { signOut } from "next-auth/react";
+import toast from "react-hot-toast";
 import { formatPhone } from "@/lib/format";
+import {
+  formatShiftDate,
+  formatShiftFullDate,
+  formatRotationDay,
+  formatCadence,
+} from "@/lib/shifts/formatShift";
 import { addGroceryItem } from "@/actions/grocery/addGroceryItem";
 import { removeGroceryItem } from "@/actions/grocery/removeGroceryItem";
+import { updateGroceryItem } from "@/actions/grocery/updateGroceryItem";
 import { addPrescription } from "@/actions/prescriptions/addPrescription";
 import { togglePickup } from "@/actions/prescriptions/togglePickup";
 import { removePrescription } from "@/actions/prescriptions/removePrescription";
+import { updatePrescription } from "@/actions/prescriptions/updatePrescription";
 import LayoutWrapper from "@/components/shared/LayoutWrapper";
+import SectionHeading from "@/components/shared/SectionHeading/SectionHeading";
+import ConfirmDialog from "@/components/shared/ConfirmDialog/ConfirmDialog";
+
+function formatPhoneNumber(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 10);
+
+  if (digits.length === 0) return "";
+  if (digits.length <= 3) return `(${digits}`;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
 
 type GroceryItem = {
   id: string;
@@ -37,19 +58,44 @@ type Helper = {
   phone: string;
 };
 
+type Shift = {
+  id: string;
+  scheduledDate: string;
+  helper: {
+    firstName: string;
+    lastName: string;
+    phone: string;
+  } | null;
+};
+
 type Props = {
   circleId: string;
   circleName: string;
   userName: string;
+  userEmail: string;
+  rotationDayOfWeek: number;
+  rotationCadence: "WEEKLY" | "BIWEEKLY" | "CUSTOM";
+  typicalArrivalTime: string | null;
+  upcomingShifts: Shift[];
   groceryItems: GroceryItem[];
   prescriptions: Prescription[];
   helpers: Helper[];
 };
 
+type ConfirmState =
+  | { type: "none" }
+  | { type: "grocery"; itemId: string; itemName: string }
+  | { type: "prescription"; prescriptionId: string; medicationName: string };
+
 export default function MyCirclePage({
   circleId,
   circleName,
   userName,
+  userEmail,
+  rotationDayOfWeek,
+  rotationCadence,
+  typicalArrivalTime,
+  upcomingShifts,
   groceryItems: initialItems,
   prescriptions: initialPrescriptions,
   helpers,
@@ -58,15 +104,20 @@ export default function MyCirclePage({
   const [isPending, startTransition] = useTransition();
 
   // Grocery state
-  const [items, setItems] = useState(initialItems);
   const [itemName, setItemName] = useState("");
   const [itemQuantity, setItemQuantity] = useState("");
   const [itemNotes, setItemNotes] = useState("");
   const [addingItem, setAddingItem] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
 
+  // Grocery edit state
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editItemName, setEditItemName] = useState("");
+  const [editItemQuantity, setEditItemQuantity] = useState("");
+  const [editItemNotes, setEditItemNotes] = useState("");
+  const [savingItem, setSavingItem] = useState(false);
+
   // Prescription state
-  const [prescriptions, setPrescriptions] = useState(initialPrescriptions);
   const [showAddRx, setShowAddRx] = useState(false);
   const [rxName, setRxName] = useState("");
   const [rxPharmacy, setRxPharmacy] = useState("");
@@ -74,9 +125,29 @@ export default function MyCirclePage({
   const [rxNotes, setRxNotes] = useState("");
   const [addingRx, setAddingRx] = useState(false);
 
-  const pickupsNeeded = prescriptions.filter((p) => p.needsPickupThisWeek);
+  // Prescription edit state
+  const [editingRxId, setEditingRxId] = useState<string | null>(null);
+  const [editRxName, setEditRxName] = useState("");
+  const [editRxPharmacy, setEditRxPharmacy] = useState("");
+  const [editRxPharmacyPhone, setEditRxPharmacyPhone] = useState("");
+  const [editRxNotes, setEditRxNotes] = useState("");
+  const [savingRx, setSavingRx] = useState(false);
 
-  // ——— Grocery handlers ———
+  // Confirm dialog
+  const [confirmState, setConfirmState] = useState<ConfirmState>({
+    type: "none",
+  });
+  const [confirming, setConfirming] = useState(false);
+
+  const pickupsNeeded = initialPrescriptions.filter(
+    (p) => p.needsPickupThisWeek,
+  );
+
+  // Shift data
+  const thisWeekShift = upcomingShifts[0] ?? null;
+  const remainingShifts = upcomingShifts.slice(1);
+
+  // ——— Grocery add ———
 
   const handleAddItem = async () => {
     if (!itemName.trim()) return;
@@ -89,58 +160,65 @@ export default function MyCirclePage({
       notes: itemNotes.trim() || undefined,
     });
 
-    if (result.success && result.item) {
-      setItems((prev) => [
-        {
-          id: result.item!.id,
-          name: result.item!.name,
-          quantity: result.item!.quantity,
-          notes: result.item!.notes,
-          status: result.item!.status,
-          addedBy: "You",
-        },
-        ...prev,
-      ]);
+    if (result.success) {
+      toast.success("Added to list");
       setItemName("");
       setItemQuantity("");
       setItemNotes("");
       setShowAddForm(false);
+      startTransition(() => router.refresh());
+    } else if (result.error) {
+      toast.error(result.error);
     }
 
     setAddingItem(false);
   };
 
-  const handleRemoveItem = async (itemId: string) => {
-    const result = await removeGroceryItem(itemId);
+  // ——— Grocery edit ———
+
+  const startEditItem = (item: GroceryItem) => {
+    setEditingItemId(item.id);
+    setEditItemName(item.name);
+    setEditItemQuantity(item.quantity ?? "");
+    setEditItemNotes(item.notes ?? "");
+  };
+
+  const cancelEditItem = () => {
+    setEditingItemId(null);
+    setEditItemName("");
+    setEditItemQuantity("");
+    setEditItemNotes("");
+  };
+
+  const saveEditItem = async () => {
+    if (!editingItemId || !editItemName.trim()) return;
+    setSavingItem(true);
+
+    const result = await updateGroceryItem({
+      itemId: editingItemId,
+      name: editItemName.trim(),
+      quantity: editItemQuantity.trim() || undefined,
+      notes: editItemNotes.trim() || undefined,
+    });
+
     if (result.success) {
-      setItems((prev) => prev.filter((i) => i.id !== itemId));
+      toast.success("Updated");
+      cancelEditItem();
+      startTransition(() => router.refresh());
+    } else if (result.error) {
+      toast.error(result.error);
     }
+
+    setSavingItem(false);
   };
 
-  // ——— Prescription handlers ———
+  // ——— Grocery remove ———
 
-  const handleTogglePickup = async (prescriptionId: string) => {
-    // Optimistic update
-    setPrescriptions((prev) =>
-      prev.map((p) =>
-        p.id === prescriptionId
-          ? { ...p, needsPickupThisWeek: !p.needsPickupThisWeek }
-          : p,
-      ),
-    );
-
-    const result = await togglePickup(prescriptionId);
-    if (!result.success) {
-      // Revert on failure
-      setPrescriptions((prev) =>
-        prev.map((p) =>
-          p.id === prescriptionId
-            ? { ...p, needsPickupThisWeek: !p.needsPickupThisWeek }
-            : p,
-        ),
-      );
-    }
+  const requestRemoveItem = (item: GroceryItem) => {
+    setConfirmState({ type: "grocery", itemId: item.id, itemName: item.name });
   };
+
+  // ——— Prescription add ———
 
   const handleAddPrescription = async () => {
     if (!rxName.trim()) return;
@@ -155,37 +233,209 @@ export default function MyCirclePage({
     });
 
     if (result.success) {
-      startTransition(() => router.refresh());
+      toast.success("Prescription added");
       setRxName("");
       setRxPharmacy("");
       setRxPharmacyPhone("");
       setRxNotes("");
       setShowAddRx(false);
+      startTransition(() => router.refresh());
+    } else if (result.error) {
+      toast.error(result.error);
     }
 
     setAddingRx(false);
   };
 
-  const handleRemovePrescription = async (prescriptionId: string) => {
-    const result = await removePrescription(prescriptionId);
+  // ——— Prescription edit ———
+
+  const startEditRx = (rx: Prescription) => {
+    setEditingRxId(rx.id);
+    setEditRxName(rx.medicationName);
+    setEditRxPharmacy(rx.pharmacyName ?? "");
+    setEditRxPharmacyPhone(formatPhoneNumber(rx.pharmacyPhone ?? ""));
+    setEditRxNotes(rx.notes ?? "");
+  };
+
+  const cancelEditRx = () => {
+    setEditingRxId(null);
+    setEditRxName("");
+    setEditRxPharmacy("");
+    setEditRxPharmacyPhone("");
+    setEditRxNotes("");
+  };
+
+  const saveEditRx = async () => {
+    if (!editingRxId || !editRxName.trim()) return;
+    setSavingRx(true);
+
+    const result = await updatePrescription({
+      prescriptionId: editingRxId,
+      medicationName: editRxName.trim(),
+      pharmacyName: editRxPharmacy.trim() || undefined,
+      pharmacyPhone: editRxPharmacyPhone.trim() || undefined,
+      notes: editRxNotes.trim() || undefined,
+    });
+
     if (result.success) {
-      setPrescriptions((prev) => prev.filter((p) => p.id !== prescriptionId));
+      toast.success("Updated");
+      cancelEditRx();
+      startTransition(() => router.refresh());
+    } else if (result.error) {
+      toast.error(result.error);
     }
+
+    setSavingRx(false);
+  };
+
+  // ——— Prescription toggle ———
+
+  const handleTogglePickup = async (prescriptionId: string) => {
+    const result = await togglePickup(prescriptionId);
+    if (result.success) {
+      startTransition(() => router.refresh());
+    } else if (result.error) {
+      toast.error(result.error);
+    }
+  };
+
+  // ——— Prescription remove ———
+
+  const requestRemoveRx = (rx: Prescription) => {
+    setConfirmState({
+      type: "prescription",
+      prescriptionId: rx.id,
+      medicationName: rx.medicationName,
+    });
+  };
+
+  // ——— Confirm handler ———
+
+  const handleConfirm = async () => {
+    if (confirmState.type === "none") return;
+
+    setConfirming(true);
+
+    if (confirmState.type === "grocery") {
+      const result = await removeGroceryItem(confirmState.itemId);
+      if (result.success) {
+        toast.success("Removed");
+        setConfirmState({ type: "none" });
+        startTransition(() => router.refresh());
+      } else if (result.error) {
+        toast.error(result.error);
+      }
+    } else if (confirmState.type === "prescription") {
+      const result = await removePrescription(confirmState.prescriptionId);
+      if (result.success) {
+        toast.success("Removed");
+        setConfirmState({ type: "none" });
+        startTransition(() => router.refresh());
+      } else if (result.error) {
+        toast.error(result.error);
+      }
+    }
+
+    setConfirming(false);
   };
 
   return (
     <section className={styles.container}>
-      <LayoutWrapper>
-        <div className={styles.wrapper}>
+      <div className={styles.content}>
+        <LayoutWrapper>
           <header className={styles.header}>
-            <h1 className={styles.greeting}>Hi {userName}</h1>
-            <p className={styles.circleName}>{circleName}</p>
+            <div>
+              <h1 className={styles.title}>Hi {userName}</h1>
+            </div>
+            <div className={styles.accountInfo}>
+              <button
+                type='button'
+                className={styles.signOutBtn}
+                onClick={() => signOut({ callbackUrl: "/login" })}
+              >
+                Sign out
+              </button>
+              <p className={styles.userEmail}>{userEmail}</p>
+            </div>
           </header>
+
+          <div className={styles.subtitle}>
+            <SectionHeading
+              title={`${circleName} — here to help with groceries and errands.`}
+              color='black'
+              dotColor='purpleDot'
+            />
+          </div>
+
+          {/* This week's helper */}
+          {thisWeekShift && thisWeekShift.helper && (
+            <section className={styles.thisWeekBanner}>
+              <p className={styles.thisWeekLabel}>
+                {/* {formatShiftDate(new Date(thisWeekShift.scheduledDate))} */}This Week:
+              </p>
+              <h2 className={styles.thisWeekHelper}>
+                {thisWeekShift.helper.firstName} {thisWeekShift.helper.lastName}{" "}
+                is coming by
+              </h2>
+              <p className={styles.thisWeekDate}>
+                {formatShiftFullDate(new Date(thisWeekShift.scheduledDate))}
+                {/* {typicalArrivalTime && ` · ${typicalArrivalTime}`} */}
+              </p>
+              <a
+                href={`tel:${thisWeekShift.helper.phone}`}
+                className={styles.thisWeekPhone}
+              >
+                {formatPhone(thisWeekShift.helper.phone)}
+              </a>
+            </section>
+          )}
+
+          {/* Upcoming shifts */}
+          {remainingShifts.length > 0 && (
+            <section className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>Coming up</h2>
+                <span className={styles.itemCount}>
+                  {formatCadence(rotationCadence)} ·{" "}
+                  {formatRotationDay(rotationDayOfWeek)}
+                </span>
+              </div>
+              <div className={styles.shiftList}>
+                {remainingShifts.map((shift) => (
+                  <div key={shift.id} className={styles.shiftRow}>
+                    <div className={styles.shiftDate}>
+                      {formatShiftDate(new Date(shift.scheduledDate))}
+                    </div>
+                    <div className={styles.shiftHelper}>
+                      {shift.helper
+                        ? `${shift.helper.firstName} ${shift.helper.lastName}`
+                        : "Not yet assigned"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Fallback when no shifts exist yet */}
+          {upcomingShifts.length === 0 && (
+            <section className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>Coming up</h2>
+              </div>
+              <p className={styles.emptyText}>
+                No visits scheduled yet. Once helpers join the circle, the
+                rotation will appear here.
+              </p>
+            </section>
+          )}
 
           {/* Who's helping */}
           {helpers.length > 0 && (
-            <section className={styles.helpersSection}>
-              <h2 className={styles.sectionTitle}>Your helpers</h2>
+            <section className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>Your helpers</h2>
+              </div>
               <div className={styles.helperList}>
                 {helpers.map((h, i) => (
                   <div key={i} className={styles.helperCard}>
@@ -206,11 +456,11 @@ export default function MyCirclePage({
             <div className={styles.sectionHeader}>
               <h2 className={styles.sectionTitle}>Grocery list</h2>
               <span className={styles.itemCount}>
-                {items.length} {items.length === 1 ? "item" : "items"}
+                {initialItems.length}{" "}
+                {initialItems.length === 1 ? "item" : "items"}
               </span>
             </div>
 
-            {/* Add item */}
             {showAddForm ? (
               <div className={styles.addForm}>
                 <input
@@ -273,40 +523,100 @@ export default function MyCirclePage({
               </button>
             )}
 
-            {/* Item list */}
-            {items.length === 0 ? (
+            {initialItems.length === 0 ? (
               <p className={styles.emptyText}>
                 Nothing on the list yet. Tap the button above to add what you
                 need.
               </p>
             ) : (
               <div className={styles.itemList}>
-                {items.map((item) => (
-                  <div key={item.id} className={styles.itemCard}>
-                    <div className={styles.itemInfo}>
-                      <p className={styles.itemName}>{item.name}</p>
-                      {item.quantity && (
-                        <p className={styles.itemMeta}>Qty: {item.quantity}</p>
-                      )}
-                      {item.notes && (
-                        <p className={styles.itemMeta}>{item.notes}</p>
-                      )}
-                      {item.addedBy && (
-                        <p className={styles.itemAddedBy}>
-                          Added by {item.addedBy}
-                        </p>
-                      )}
+                {initialItems.map((item) =>
+                  editingItemId === item.id ? (
+                    // Edit mode
+                    <div key={item.id} className={styles.addForm}>
+                      <input
+                        type='text'
+                        className={styles.inputLarge}
+                        placeholder='Item name'
+                        value={editItemName}
+                        onChange={(e) => setEditItemName(e.target.value)}
+                        autoFocus
+                      />
+                      <div className={styles.addFormRow}>
+                        <input
+                          type='text'
+                          className={styles.inputMedium}
+                          placeholder='Quantity (optional)'
+                          value={editItemQuantity}
+                          onChange={(e) => setEditItemQuantity(e.target.value)}
+                        />
+                      </div>
+                      <textarea
+                        className={styles.textareaMedium}
+                        placeholder='Notes (optional)'
+                        value={editItemNotes}
+                        onChange={(e) => setEditItemNotes(e.target.value)}
+                        rows={2}
+                      />
+                      <div className={styles.addFormActions}>
+                        <button
+                          type='button'
+                          className={styles.cancelBtn}
+                          onClick={cancelEditItem}
+                          disabled={savingItem}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type='button'
+                          className={styles.addBtn}
+                          onClick={saveEditItem}
+                          disabled={savingItem || !editItemName.trim()}
+                        >
+                          {savingItem ? "Saving..." : "Save"}
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      type='button'
-                      className={styles.removeBtn}
-                      onClick={() => handleRemoveItem(item.id)}
-                      aria-label={`Remove ${item.name}`}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
+                  ) : (
+                    // View mode
+                    <div key={item.id} className={styles.itemCard}>
+                      <div className={styles.itemInfo}>
+                        <p className={styles.itemName}>{item.name}</p>
+                        {item.quantity && (
+                          <p className={styles.itemMeta}>
+                            Qty: {item.quantity}
+                          </p>
+                        )}
+                        {item.notes && (
+                          <p className={styles.itemMeta}>{item.notes}</p>
+                        )}
+                        {item.addedBy && (
+                          <p className={styles.itemAddedBy}>
+                            Added by {item.addedBy}
+                          </p>
+                        )}
+                      </div>
+                      <div className={styles.itemActions}>
+                        <button
+                          type='button'
+                          className={styles.editBtn}
+                          onClick={() => startEditItem(item)}
+                          aria-label={`Edit ${item.name}`}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type='button'
+                          className={styles.removeBtn}
+                          onClick={() => requestRemoveItem(item)}
+                          aria-label={`Remove ${item.name}`}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ),
+                )}
               </div>
             )}
           </section>
@@ -322,56 +632,116 @@ export default function MyCirclePage({
               )}
             </div>
 
-            {prescriptions.length === 0 && !showAddRx ? (
+            {initialPrescriptions.length === 0 && !showAddRx ? (
               <p className={styles.emptyText}>
                 No prescriptions set up yet. Add your medications so your helper
                 knows what to pick up.
               </p>
             ) : (
               <div className={styles.rxList}>
-                {prescriptions.map((rx) => (
-                  <div key={rx.id} className={styles.rxCard}>
-                    <div className={styles.rxCheckbox}>
+                {initialPrescriptions.map((rx) =>
+                  editingRxId === rx.id ? (
+                    // Edit mode
+                    <div key={rx.id} className={styles.addForm}>
                       <input
-                        type='checkbox'
-                        id={`rx-${rx.id}`}
-                        className={styles.checkbox}
-                        checked={rx.needsPickupThisWeek}
-                        onChange={() => handleTogglePickup(rx.id)}
+                        type='text'
+                        className={styles.inputLarge}
+                        placeholder='Medication name'
+                        value={editRxName}
+                        onChange={(e) => setEditRxName(e.target.value)}
+                        autoFocus
                       />
+                      <div className={styles.addFormRow}>
+                        <input
+                          type='text'
+                          className={styles.inputMedium}
+                          placeholder='Pharmacy name (optional)'
+                          value={editRxPharmacy}
+                          onChange={(e) => setEditRxPharmacy(e.target.value)}
+                        />
+                        <input
+                          type='tel'
+                          className={styles.inputMedium}
+                          placeholder='Pharmacy phone (optional)'
+                          value={editRxPharmacyPhone}
+                          onChange={(e) =>
+                            setEditRxPharmacyPhone(
+                              formatPhoneNumber(e.target.value),
+                            )
+                          }
+                        />
+                      </div>
+                      <textarea
+                        className={styles.textareaMedium}
+                        placeholder='Notes (optional)'
+                        value={editRxNotes}
+                        onChange={(e) => setEditRxNotes(e.target.value)}
+                        rows={2}
+                      />
+                      <div className={styles.addFormActions}>
+                        <button
+                          type='button'
+                          className={styles.cancelBtn}
+                          onClick={cancelEditRx}
+                          disabled={savingRx}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type='button'
+                          className={styles.addBtn}
+                          onClick={saveEditRx}
+                          disabled={savingRx || !editRxName.trim()}
+                        >
+                          {savingRx ? "Saving..." : "Save"}
+                        </button>
+                      </div>
                     </div>
-                    <div className={styles.rxInfo}>
-                      <label htmlFor={`rx-${rx.id}`} className={styles.rxName}>
-                        {rx.medicationName}
-                      </label>
-                      {rx.pharmacyName && (
-                        <p className={styles.rxPharmacy}>
-                          {rx.pharmacyName}
-                          {rx.pharmacyPhone &&
-                            ` · ${formatPhone(rx.pharmacyPhone)}`}
-                        </p>
-                      )}
-                      {rx.notes && <p className={styles.rxNotes}>{rx.notes}</p>}
-                      {rx.needsPickupThisWeek && (
-                        <p className={styles.rxPickupFlag}>
-                          Needs pickup this week
-                        </p>
-                      )}
+                  ) : (
+                    // View mode
+                    <div key={rx.id} className={styles.rxCard}>
+                      <div className={styles.rxInfo}>
+                        <p className={styles.rxName}>{rx.medicationName}</p>
+                        {rx.pharmacyName && (
+                          <p className={styles.rxPharmacy}>
+                            {rx.pharmacyName}
+                            {rx.pharmacyPhone &&
+                              ` · ${formatPhone(rx.pharmacyPhone)}`}
+                          </p>
+                        )}
+                        {rx.notes && (
+                          <p className={styles.rxNotes}>{rx.notes}</p>
+                        )}
+                        {rx.needsPickupThisWeek && (
+                          <p className={styles.rxPickupFlag}>
+                            Needs pickup this week
+                          </p>
+                        )}
+                      </div>
+                      <div className={styles.itemActions}>
+                        <button
+                          type='button'
+                          className={styles.editBtn}
+                          onClick={() => startEditRx(rx)}
+                          aria-label={`Edit ${rx.medicationName}`}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type='button'
+                          className={styles.removeBtn}
+                          onClick={() => requestRemoveRx(rx)}
+                          aria-label={`Remove ${rx.medicationName}`}
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      type='button'
-                      className={styles.removeBtn}
-                      onClick={() => handleRemovePrescription(rx.id)}
-                      aria-label={`Remove ${rx.medicationName}`}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
+                  ),
+                )}
               </div>
             )}
 
-            {/* Add prescription form */}
             {showAddRx ? (
               <div className={styles.addForm}>
                 <input
@@ -395,7 +765,9 @@ export default function MyCirclePage({
                     className={styles.inputMedium}
                     placeholder='Pharmacy phone (optional)'
                     value={rxPharmacyPhone}
-                    onChange={(e) => setRxPharmacyPhone(e.target.value)}
+                    onChange={(e) =>
+                      setRxPharmacyPhone(formatPhoneNumber(e.target.value))
+                    }
                   />
                 </div>
                 <textarea
@@ -439,8 +811,31 @@ export default function MyCirclePage({
               </button>
             )}
           </section>
-        </div>
-      </LayoutWrapper>
+        </LayoutWrapper>
+      </div>
+
+      {/* Confirm remove dialog */}
+      <ConfirmDialog
+        isOpen={confirmState.type !== "none"}
+        onClose={() => setConfirmState({ type: "none" })}
+        onConfirm={handleConfirm}
+        title={
+          confirmState.type === "grocery"
+            ? `Remove ${confirmState.itemName}?`
+            : confirmState.type === "prescription"
+              ? `Remove ${confirmState.medicationName}?`
+              : ""
+        }
+        message={
+          confirmState.type === "grocery"
+            ? "This will remove the item from your grocery list."
+            : confirmState.type === "prescription"
+              ? "This will remove the prescription from your list. You can always add it back later."
+              : ""
+        }
+        confirmText='Yes, remove it'
+        confirming={confirming}
+      />
     </section>
   );
 }

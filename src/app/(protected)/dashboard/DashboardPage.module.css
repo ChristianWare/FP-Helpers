@@ -9,32 +9,38 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 40px;
+  margin-bottom: 1.5rem;
   gap: 16px;
   border-bottom: 1px solid var(--gray2);
   padding-bottom: 1rem;
 }
 
 .title {
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: normal;
-  margin: 0 0 4px;
-  color: #111;
+  font-size: 10rem;
+  font-family: var(--BoogyBrutPoster);
+  text-transform: none;
+  letter-spacing: 0.5px;
+  color: var(--purple);
+}
+
+@media screen and (max-width: 568px) {
+  .title {
+    font-size: 6rem;
+  }
 }
 
 .subtitle {
-  font-size: 15px;
-  color: #666;
+  font-size: 16px;
+  color: var(--purple);
   margin: 0;
 }
 
 .signOutBtn {
   padding: 8px 16px;
   background: none;
-  border: 1px solid #d4d4d8;
+  border: 1px solid var(--purple);
   border-radius: 6px;
-  color: #555;
+  color: var(--purple);
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
@@ -42,8 +48,8 @@
 }
 
 .signOutBtn:hover {
-  border-color: #111;
-  color: #111;
+  background-color: var(--purple);
+  color: var(--tan);
 }
 
 .emptyState {
@@ -52,6 +58,7 @@
   background: #fff;
   border-radius: 12px;
   border: 1px solid #eee;
+  margin-bottom: 2rem;
 }
 
 .emptyIcon {
@@ -98,7 +105,8 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
-  margin-bottom: 32px;
+  margin-top: 2rem;
+  margin-bottom: 4rem;
 }
 
 .circleCard {
@@ -265,7 +273,7 @@
   }
 }
 
-@media screen and (max-width: 568px) {
+@media screen and (max-width: 768px) {
   .header {
     flex-direction: column;
     align-items: center;

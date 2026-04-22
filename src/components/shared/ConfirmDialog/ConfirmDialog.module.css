@@ -1,0 +1,86 @@
+.content {
+  text-align: center;
+  padding: 16px 0;
+}
+
+.icon {
+  font-size: 40px;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: #111;
+  margin: 0 0 12px;
+}
+
+.message {
+  font-size: 16px;
+  color: #666;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.cancel {
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: #555;
+  background: none;
+  border: 1px solid #d4d4d8;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex: 1;
+}
+
+.cancel:hover:not(:disabled) {
+  border-color: #111;
+  color: #111;
+}
+
+.cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirm {
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: #fff;
+  background: var(--purple);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  flex: 1;
+}
+
+.confirm:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirm.danger {
+  background: #dc2626;
+}
+
+.confirm.danger:hover:not(:disabled) {
+  background: #b91c1c;
+  opacity: 1;
+}

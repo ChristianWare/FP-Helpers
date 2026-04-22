@@ -11,6 +11,7 @@ import { generateToken } from "@/lib/tokens";
 import { getUserByEmail } from "@/lib/user";
 import { Resend } from "resend";
 import { buildCircleWelcomeEmail } from "@/lib/emails/circleWelcome";
+import { ensureShiftsForCircle } from "@/lib/shifts/generateShifts";
 import bcryptjs from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
@@ -100,23 +101,25 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
         },
       });
 
-      // Add recipient as RECIPIENT membership (not in rotation)
+      // Add recipient as RECIPIENT membership (not in rotation, sentinel order)
       await tx.circleMembership.create({
         data: {
           userId: recipient.id,
           circleId: circle.id,
           role: "RECIPIENT",
           inRotation: false,
+          rotationOrder: -1,
         },
       });
 
-      // Add organizer as ADMIN membership
+      // Add organizer as ADMIN membership — first in rotation if opted in
       await tx.circleMembership.create({
         data: {
           userId: session.user.id!,
           circleId: circle.id,
           role: "ADMIN",
           inRotation: organizerInRotation,
+          rotationOrder: organizerInRotation ? 0 : -1,
         },
       });
 
@@ -142,7 +145,15 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
     };
   }
 
-// 7. Send welcome email with login credentials (only for new users)
+  // 7. Generate the first 8 weeks of shifts now that memberships exist
+  try {
+    await ensureShiftsForCircle(circleId);
+  } catch (err) {
+    console.error("[createCircle] Failed to generate initial shifts:", err);
+    // Don't fail circle creation if shift generation has an issue
+  }
+
+  // 8. Send welcome email with login credentials (only for new users)
   if (!existingRecipient) {
     try {
       const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/login`;
@@ -173,7 +184,7 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
     }
   }
 
-  // 8. Invalidate cached pages so they pick up the new circle
+  // 9. Invalidate cached pages so they pick up the new circle
   revalidatePath("/dashboard");
   revalidatePath(`/circles/${circleId}`);
   revalidatePath("/admin");
