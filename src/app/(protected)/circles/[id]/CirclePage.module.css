@@ -1,20 +1,22 @@
 /* app/(protected)/circles/[id]/CirclePage.module.css */
 
-.page {
+.container {
+  margin: 0 auto;
+  padding-top: 5rem;
   min-height: 100vh;
   background-color: var(--tan);
-  padding: 5rem 0;
 }
 
-.wrapper {
-  max-width: 720px;
-  margin: 0 auto;
-}
-
-/* ——— Header ——— */
+/* ——— Header (matches my-circle) ——— */
 
 .header {
-  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+  gap: 16px;
+  border-bottom: 1px solid var(--gray2);
+  padding-bottom: 1rem;
 }
 
 .backLink {
@@ -26,21 +28,27 @@
 }
 
 .backLink:hover {
-  color: #111;
+  text-decoration: underline;
 }
 
 .title {
   font-size: 10rem;
   font-family: var(--BoogyBrutPoster);
   text-transform: none;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   color: var(--purple);
+}
+
+@media screen and (max-width: 768px) {
+  .title {
+    font-size: 6rem;
+  }
 }
 
 .subtitle {
   font-size: 16px;
-  color: #666;
-  margin: 0;
+  color: var(--purple);
+  margin: 0 0 2rem;
 }
 
 /* ——— Success banner ——— */
@@ -52,8 +60,8 @@
   padding: 20px 24px;
   background: #f0fdf4;
   border: 1px solid #bbf7d0;
-  border-radius: 12px;
-  margin-bottom: 24px;
+  border-radius: 16px;
+  margin-bottom: 2rem;
 }
 
 .successIcon {
@@ -63,7 +71,7 @@
 }
 
 .successTitle {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: normal;
   margin: 0 0 6px;
@@ -77,34 +85,153 @@
   line-height: 1.6;
 }
 
+/* ——— Your next shift hero banner ——— */
+
+.myShiftBanner {
+  background: var(--purple);
+  color: var(--tan);
+  padding: 32px 28px;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+}
+
+.myShiftLabel {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 10px;
+  color: var(--green3);
+  font-family: var(--VisbyCF);
+}
+
+.myShiftDate {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: normal;
+  line-height: 1.2;
+  margin: 0 0 8px;
+  color: var(--tan);
+}
+
+.myShiftTime {
+  font-size: 16px;
+  margin: 0 0 20px;
+  color: var(--tan);
+  opacity: 0.85;
+}
+
+.myShiftCta {
+  display: inline-block;
+  padding: 12px 22px;
+  background: var(--tan);
+  color: var(--purple);
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.myShiftCta:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 480px) {
+  .myShiftBanner {
+    padding: 24px 20px;
+  }
+
+  .myShiftDate {
+    font-size: 24px;
+  }
+}
+
 /* ——— Sections ——— */
 
 .section {
-  background: #fff;
-  border-radius: 12px;
+  margin-bottom: 2rem;
   padding: 24px;
-  margin-bottom: 16px;
+  background: #fff;
   border: 1px solid #eee;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-gap: 2rem;
+  border-radius: 16px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
 }
 
 .sectionTitle {
-  font-size: 2rem;
+  font-size: 22px;
   font-weight: 700;
   letter-spacing: normal;
-  padding-bottom: 0.5rem;
   color: var(--purple);
   text-transform: uppercase;
-  border-bottom: 1px solid var(--gray);
+  margin: 0;
 }
 
-.sectionSubtitle {
-  font-size: 16px;
+.itemCount {
+  font-size: 14px;
+  color: #888;
+  font-weight: 600;
+}
+
+.listContext {
+  font-size: 15px;
   color: #666;
   margin: 0 0 16px;
   line-height: 1.5;
+  font-style: italic;
+}
+
+/* ——— Info card (Schedule + Recipient) ——— */
+
+.infoCard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: #fafafa;
+  border: 1px solid var(--gray);
+  border-radius: 12px;
+}
+
+.infoRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fieldLabel {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 14px;
+  font-weight: 700;
+  color: #888;
+}
+
+.infoValue {
+  font-size: 17px;
+  font-weight: 600;
+  color: #111;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.infoValueLink {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--purple);
+  text-decoration: none;
+}
+
+.infoValueLink:hover {
+  text-decoration: underline;
 }
 
 /* ——— Share link ——— */
@@ -114,12 +241,9 @@
   gap: 8px;
   align-items: stretch;
   background: #fafafa;
-  border: 1px solid #e5e5e5;
-  border-radius: 10px;
+  border: 1px solid var(--gray);
+  border-radius: 12px;
   padding: 8px;
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
 }
 
 .shareUrl {
@@ -130,7 +254,7 @@
   border: 1px solid #eee;
   border-radius: 8px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 16px;
+  font-size: 15px;
   color: #111;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -141,95 +265,101 @@
   font-size: 16px;
   font-weight: 700;
   letter-spacing: normal;
-  background: #111;
-  color: #fff;
+  background: var(--purple);
+  color: var(--tan);
   border: none;
   border-radius: 8px;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s ease;
+  transition: opacity 0.15s ease;
 }
 
 .copyBtn:hover {
-  background: #000;
+  opacity: 0.9;
 }
 
-/* ——— Schedule details ——— */
+/* ——— Helpers list ——— */
 
-.detailList {
-  margin: 0;
+.helperList {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
 }
 
-.detailRow {
+@media (max-width: 768px) {
+  .helperList {
+    grid-template-columns: 1fr;
+  }
+
+  .myShiftBanner {
+    margin-bottom: 0rem;
+  }
+}
+
+.helperCard {
   display: flex;
-  gap: 16px;
-  padding: 12px 0;
-  border-bottom: 1px solid #f5f5f5;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  background: #fafafa;
+  border: 1px solid var(--gray);
+  border-radius: 12px;
+  position: relative;
+  transition: border-color 0.15s ease;
 }
 
-.detailRow:last-child {
-  border-bottom: none;
+.helperCard:hover {
+  border-color: var(--purple);
 }
 
-.detailRow dt {
-  font-size: 16px;
-  font-weight: 600;
+.helperCardSelf {
+  background: var(--purple);
+  border-color: var(--purple);
+}
+
+.helperCardSelf:hover {
+  border-color: var(--purple);
+}
+
+.selfPill {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 3px 10px;
+  background: var(--tan);
+  color: var(--purple);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.helperName {
+  font-size: 20px;
+  font-weight: 700;
   letter-spacing: normal;
-  color: #666;
-  min-width: 120px;
-}
-
-.detailRow dd {
-  font-size: 15px;
   color: #111;
   margin: 0;
 }
 
-/* ——— Member cards ——— */
+.helperCardSelf .helperName {
+  color: var(--tan);
+}
 
-.memberList {
+.helperBadges {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.sectionCard {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 2rem;
-  padding: 2rem;
-  background: var(--white);
-  border: 1px solid var(--gray);
-  border-radius: 10px;
-}
-
-.memberInfo {
-  flex: 1;
-}
-
-.memberName,
-.memberContact {
-  font-size: 16px;
-  color: #888;
-  margin: 0;
-}
-
-.memberMeta {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-top: 2rem;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .roleBadge {
   padding: 4px 10px;
   background: #f4f4f5;
   border-radius: 6px;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: normal;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #666;
 }
@@ -239,94 +369,83 @@
   background: #dbeafe;
   color: #1e40af;
   border-radius: 6px;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: normal;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-.emptyText {
-  font-size: 15px;
-  color: #888;
-  margin: 0;
-  line-height: 1.5;
-}
-
-/* ——— Danger zone ——— */
-
-.dangerSection {
-  margin-top: 24px;
-  padding: 24px;
-  background: #fff;
-  border: 1px solid #fecaca;
-  border-radius: 12px;
-}
-
-.dangerTitle {
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: normal;
-  text-transform: uppercase;
-  color: #dc2626;
-  margin: 0 0 16px;
-}
-
-/* ——— Field labels inside section cards ——— */
-
-.fieldLabel {
-  display: block;
-  margin-bottom: 4px;
-  text-transform: uppercase;
-  letter-spacing: normal;
-  font-size: 16px;
-}
-
-.fieldValue {
-  font-size: 16px;
-  color: #111;
-  margin: 0;
-  line-height: 1.5;
-}
-
-/* ——— "This is you" helper card ——— */
-
-.sectionCardSelf {
-  background: var(--purple);
-  border-color: var(--purple);
-}
-
-.sectionCardSelf .fieldLabel {
-  color: var(--tan);
-  opacity: 0.85;
-}
-
-.sectionCardSelf .memberName,
-.sectionCardSelf .memberContact {
-  color: var(--white);
-}
-
-.sectionCardSelf .roleBadge {
+.helperCardSelf .roleBadge {
   background: var(--tan);
   color: var(--purple);
 }
 
-.sectionCardSelf .rotationBadge {
-  background: var(--white);
+.helperCardSelf .rotationBadge {
+  background: #fff;
   color: var(--purple);
 }
 
-.memberContactSmall {
-  font-size: 14px;
-  color: #888;
-  margin: 4px 0 0;
+.helperPhone {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--purple);
+  text-decoration: none;
+  margin: 0;
 }
 
-.sectionCardSelf .memberContactSmall {
+.helperPhone:hover {
+  text-decoration: underline;
+}
+
+.helperCardSelf .helperPhone {
+  color: var(--tan);
+}
+
+.helperEmail {
+  font-size: 14px;
+  color: #888;
+  margin: 0;
+  word-break: break-all;
+}
+
+.helperCardSelf .helperEmail {
   color: var(--tan);
   opacity: 0.85;
 }
 
-/* ——— Your shifts section ——— */
+.helperRotation {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gray);
+}
+
+.helperCardSelf .helperRotation {
+  border-top-color: rgba(255, 255, 255, 0.2);
+}
+
+.helperRotationLabel {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111;
+  margin: 0 0 2px;
+}
+
+.helperCardSelf .helperRotationLabel {
+  color: var(--tan);
+}
+
+.helperRotationNext {
+  font-size: 14px;
+  color: #888;
+  margin: 0;
+}
+
+.helperCardSelf .helperRotationNext {
+  color: var(--tan);
+  opacity: 0.85;
+}
+
+/* ——— Your shifts list ——— */
 
 .shiftsGroupLabel {
   font-size: 14px;
@@ -352,26 +471,25 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  background: var(--purple);
-  color: var(--tan);
-  border-radius: 10px;
+  background: #fafafa;
+  color: #111;
+  border: 1px solid var(--gray);
+  border-radius: 12px;
   text-decoration: none;
-  transition: opacity 0.15s ease;
+  transition: all 0.15s ease;
   gap: 12px;
 }
 
 .shiftRow:hover {
-  opacity: 0.9;
+  border-color: var(--purple);
+  background: #fff;
 }
 
 .shiftRowCompleted {
-  background: #fafafa;
-  color: #111;
-  border: 1px solid var(--gray);
+  opacity: 0.8;
 }
 
 .shiftRowCompleted:hover {
-  background: #f5f5f5;
   opacity: 1;
 }
 
@@ -387,11 +505,12 @@
   font-size: 17px;
   font-weight: 700;
   letter-spacing: normal;
+  color: #111;
 }
 
 .shiftRowFullDate {
   font-size: 14px;
-  opacity: 0.85;
+  color: #888;
   font-weight: 500;
 }
 
@@ -405,12 +524,146 @@
   font-size: 20px;
   font-weight: 700;
   flex-shrink: 0;
+  color: var(--purple);
 }
 
-/* ——— Responsive ——— */
+/* ——— Rotation schedule ——— */
 
-@media screen and (max-width: 568px) {
-  .title {
-    font-size: 6rem;
+.rotationList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rotationRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 16px 20px;
+  background: #fafafa;
+  border: 1px solid var(--gray);
+  border-radius: 12px;
+  align-items: center;
+  transition: border-color 0.15s ease;
+}
+
+.rotationRowMine {
+  background: #faf7ff;
+  border-color: var(--purple);
+  border-width: 2px;
+  padding: 15px 19px;
+}
+
+.rotationDate {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rotationDateMain {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: #111;
+}
+
+.rotationDateFull {
+  font-size: 13px;
+  color: #888;
+  font-weight: 500;
+}
+
+.rotationHelper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  text-align: right;
+  min-width: 0;
+}
+
+.rotationHelperName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rotationMinePill {
+  padding: 3px 10px;
+  background: var(--purple);
+  color: var(--tan);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.rotationUnassigned {
+  font-size: 15px;
+  color: #aaa;
+  font-style: italic;
+}
+
+@media (max-width: 480px) {
+  .rotationRow {
+    padding: 14px 16px;
+  }
+
+  .rotationDateMain,
+  .rotationHelperName {
+    font-size: 15px;
+  }
+}
+
+/* ——— Empty text ——— */
+
+.emptyText {
+  font-size: 16px;
+  color: #888;
+  line-height: 1.6;
+  margin: 0;
+  text-align: center;
+  padding: 20px 0;
+}
+
+/* ——— Danger zone ——— */
+
+.dangerSection {
+  margin-top: 2rem;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #fecaca;
+  border-radius: 16px;
+}
+
+.dangerTitle {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #dc2626;
+  margin: 0 0 16px;
+}
+
+/* ——— Responsive header ——— */
+
+@media screen and (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    text-align: center;
+  }
+
+  .title,
+  .subtitle {
+    text-align: center;
   }
 }

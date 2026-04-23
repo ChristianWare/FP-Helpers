@@ -2,7 +2,7 @@
 import { auth } from "../../../../../auth";
 import { db } from "@/lib/db";
 import { redirect, notFound } from "next/navigation";
-import CirclePage from "./CirclePage.tsx";
+import CirclePage from "./CirclePage";
 
 export default async function Page({
   params,
@@ -116,6 +116,22 @@ export default async function Page({
     take: 3,
   });
 
+  // Fetch the full upcoming rotation (all helpers, next ~8 shifts)
+  const rotationShifts = await db.shift.findMany({
+    where: {
+      circleId: circleId,
+      scheduledDate: { gte: today },
+      status: { in: ["SCHEDULED", "IN_PROGRESS"] },
+    },
+    include: {
+      assignedUser: {
+        select: { id: true, firstName: true, lastName: true },
+      },
+    },
+    orderBy: { scheduledDate: "asc" },
+    take: 8,
+  });
+
   return (
     <CirclePage
       circle={{
@@ -149,6 +165,17 @@ export default async function Page({
         scheduledDate: s.scheduledDate.toISOString(),
         status: s.status,
         completedAt: s.completedAt?.toISOString() ?? null,
+      }))}
+      rotationShifts={rotationShifts.map((s) => ({
+        id: s.id,
+        scheduledDate: s.scheduledDate.toISOString(),
+        assignedUser: s.assignedUser
+          ? {
+              id: s.assignedUser.id,
+              firstName: s.assignedUser.firstName,
+              lastName: s.assignedUser.lastName,
+            }
+          : null,
       }))}
     />
   );
