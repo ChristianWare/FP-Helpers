@@ -1,0 +1,479 @@
+/* app/(protected)/circles/[id]/shifts/[shiftId]/ShiftDetailPage.module.css */
+
+.container {
+  margin: 0 auto;
+  padding-top: 5rem;
+  min-height: 100vh;
+  background-color: var(--tan);
+}
+
+/* ——— Header (matches my-circle pattern) ——— */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+  gap: 16px;
+  border-bottom: 1px solid var(--gray2);
+  padding-bottom: 1rem;
+}
+
+.backLink {
+  display: inline-block;
+  color: var(--purple);
+  font-size: 16px;
+  text-decoration: none;
+  margin-bottom: 12px;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.title {
+  font-size: 10rem;
+  font-family: var(--BoogyBrutPoster);
+  text-transform: none;
+  letter-spacing: 0.5px;
+  color: var(--purple);
+}
+
+@media screen and (max-width: 568px) {
+  .title {
+    font-size: 6rem;
+  }
+}
+
+.signOutBtn {
+  padding: 8px 16px;
+  background: none;
+  border: 1px solid var(--purple);
+  border-radius: 6px;
+  color: var(--purple);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.signOutBtn:hover {
+  background-color: var(--purple);
+  color: var(--tan);
+}
+
+.accountInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.userEmail {
+  font-size: 16px;
+  color: #888;
+  margin: 0;
+  letter-spacing: normal;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: var(--purple);
+  margin: 0 0 2rem;
+}
+
+/* ——— Shift banner (mirrors thisWeekBanner in my-circle) ——— */
+
+.shiftBanner {
+  background: var(--purple);
+  color: var(--tan);
+  padding: 32px 28px;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+}
+
+.shiftBannerTitle {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: normal;
+  line-height: 1.2;
+  margin: 0 0 8px;
+  color: var(--tan);
+}
+
+.shiftBannerDate {
+  font-size: 18px;
+  margin: 0 0 20px;
+  color: var(--green3);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-family: var(--VisbyCF);
+}
+
+.shiftBannerPhone {
+  display: inline-block;
+  padding: 12px 22px;
+  background: var(--tan);
+  color: var(--purple);
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.shiftBannerPhone:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 480px) {
+  .shiftBanner {
+    padding: 24px 20px;
+  }
+  .shiftBannerTitle {
+    font-size: 24px;
+  }
+}
+
+/* ——— Sections ——— */
+
+.section {
+  margin-bottom: 2rem;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 16px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sectionTitle {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: var(--purple);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.sectionSubtitle {
+  font-size: 15px;
+  color: #666;
+  margin: 0 0 16px;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.itemCount {
+  font-size: 16px;
+  color: #888;
+  font-weight: 600;
+}
+
+/* ——— Address + notes ——— */
+
+.addressBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: #fafafa;
+  border: 1px solid var(--gray);
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.addressText {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.mapsLink {
+  font-size: 16px;
+  color: var(--purple);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.mapsLink:hover {
+  text-decoration: underline;
+}
+
+.notesBlock {
+  padding: 16px;
+  background: #fafafa;
+  border: 1px solid var(--gray);
+  border-radius: 10px;
+}
+
+.notesLabel {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #888;
+  margin: 0 0 6px;
+}
+
+.notesText {
+  font-size: 16px;
+  color: #111;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ——— Item list with checkboxes ——— */
+
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.itemRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  background: #fafafa;
+  border: 1px solid var(--gray);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.itemRow:hover:not(.itemRowReadonly) {
+  border-color: var(--purple);
+  background: #fff;
+}
+
+.itemRowPurchased {
+  background: #f5f5f5;
+  opacity: 0.75;
+}
+
+.itemRowReadonly {
+  cursor: default;
+}
+
+.checkbox {
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  accent-color: var(--purple);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.checkbox:disabled {
+  cursor: default;
+}
+
+.itemInfo {
+  flex: 1;
+}
+
+.itemName {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: #111;
+  margin: 0 0 4px;
+  transition: all 0.2s ease;
+}
+
+.itemQty {
+  color: #666;
+  font-weight: 500;
+}
+
+.itemMeta {
+  font-size: 15px;
+  color: #666;
+  margin: 0 0 2px;
+  line-height: 1.4;
+  transition: all 0.2s ease;
+}
+
+.itemAddedBy {
+  font-size: 14px;
+  color: #aaa;
+  margin: 4px 0 0;
+}
+
+/* Strikethrough state */
+.struck {
+  text-decoration: line-through;
+  color: #999;
+}
+
+/* ——— Mark complete button ——— */
+
+.completeBtn {
+  width: 100%;
+  padding: 18px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: normal;
+  background: var(--purple);
+  color: var(--tan);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  margin-top: 8px;
+}
+
+.completeBtn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.completeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.completedNote {
+  font-size: 15px;
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 14px 18px;
+  border-radius: 10px;
+  margin: 16px 0 0;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* ——— Prescription list ——— */
+
+.rxList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rxCard {
+  padding: 16px;
+  background: #fafafa;
+  border: 1px solid var(--gray);
+  border-radius: 12px;
+}
+
+.rxName {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: #111;
+  margin: 0 0 4px;
+}
+
+.rxPharmacy {
+  font-size: 16px;
+  color: #666;
+  margin: 0 0 2px;
+}
+
+.rxPhone {
+  color: var(--purple);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.rxPhone:hover {
+  text-decoration: underline;
+}
+
+.rxMeta {
+  font-size: 15px;
+  color: #888;
+  margin: 2px 0 0;
+  line-height: 1.4;
+}
+
+/* ——— Emergency contact ——— */
+
+.emergencyBlock {
+  padding: 20px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.emergencyName {
+  font-size: 18px;
+  font-weight: 700;
+  color: #991b1b;
+  margin: 0 0 8px;
+}
+
+.emergencyPhone {
+  display: inline-block;
+  padding: 12px 24px;
+  background: #dc2626;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.emergencyPhone:hover {
+  opacity: 0.9;
+}
+
+/* ——— Empty text ——— */
+
+.emptyText {
+  font-size: 16px;
+  color: #888;
+  line-height: 1.6;
+  margin: 0;
+  text-align: center;
+  padding: 20px 0;
+}
+
+/* ——— Responsive header ——— */
+
+@media screen and (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3rem;
+    text-align: center;
+  }
+
+  .title {
+    text-align: center;
+  }
+
+  .accountInfo {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    width: 100%;
+  }
+
+  .userEmail {
+    order: -1;
+  }
+
+  .signOutBtn {
+    padding: 6px 12px;
+    font-size: 16px;
+  }
+}

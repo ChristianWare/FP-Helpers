@@ -131,3 +131,58 @@ export async function ensureShiftsForCircle(
 
   return toCreate.length;
 }
+
+/**
+ * Reassigns all future SCHEDULED shifts to match the current rotation order.
+ * Call this after adding or removing a helper so new shifts reflect the updated roster.
+ * Does NOT touch completed, in-progress, missed, or swapped shifts — those stay
+ * with whoever actually handled (or was supposed to handle) them.
+ *
+ * Returns the count of shifts that were updated.
+ */
+export async function rebalanceShiftsForCircle(
+  circleId: string,
+): Promise<number> {
+  const memberships = await db.circleMembership.findMany({
+    where: {
+      circleId,
+      active: true,
+      inRotation: true,
+      rotationOrder: { gte: 0 },
+      role: { in: ["ADMIN", "HELPER"] },
+    },
+    orderBy: { rotationOrder: "asc" },
+    select: { userId: true },
+  });
+
+  if (memberships.length === 0) return 0;
+
+  const today = startOfDay(new Date());
+
+  const shifts = await db.shift.findMany({
+    where: {
+      circleId,
+      scheduledDate: { gte: today },
+      status: "SCHEDULED",
+    },
+    orderBy: { scheduledDate: "asc" },
+    select: { id: true, assignedUserId: true },
+  });
+
+  let updated = 0;
+  for (let i = 0; i < shifts.length; i++) {
+    const correctUserId = memberships[i % memberships.length].userId;
+    if (shifts[i].assignedUserId !== correctUserId) {
+      await db.shift.update({
+        where: { id: shifts[i].id },
+        data: {
+          assignedUserId: correctUserId,
+          originalAssignedUserId: correctUserId,
+        },
+      });
+      updated++;
+    }
+  }
+
+  return updated;
+}

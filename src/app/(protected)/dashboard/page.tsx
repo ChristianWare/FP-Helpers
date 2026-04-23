@@ -8,6 +8,7 @@ import LayoutWrapper from "@/components/shared/LayoutWrapper";
 import Button from "@/components/shared/Button/Button";
 import { formatPhone } from "@/lib/format";
 import SectionHeading from "@/components/shared/SectionHeading/SectionHeading";
+import { formatShiftDate } from "@/lib/shifts/formatShift";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -55,6 +56,51 @@ export default async function DashboardPage() {
     orderBy: { joinedAt: "desc" },
   });
 
+  // Fetch the next upcoming shift for each circle (one query for all of them)
+  const circleIds = memberships.map((m) => m.circleId);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const upcomingShifts =
+    circleIds.length > 0
+      ? await db.shift.findMany({
+          where: {
+            circleId: { in: circleIds },
+            scheduledDate: { gte: today },
+            status: { in: ["SCHEDULED", "IN_PROGRESS"] },
+          },
+          include: {
+            assignedUser: {
+              select: { id: true, firstName: true, lastName: true },
+            },
+          },
+          orderBy: { scheduledDate: "asc" },
+        })
+      : [];
+
+  // Two maps: one for the circle's next shift (anyone),
+  // one for the logged-in user's own next shift in each circle
+  const nextShiftByCircle = new Map<
+    string,
+    (typeof upcomingShifts)[number]
+  >();
+  const myNextShiftByCircle = new Map<
+    string,
+    (typeof upcomingShifts)[number]
+  >();
+
+  for (const shift of upcomingShifts) {
+    if (!nextShiftByCircle.has(shift.circleId)) {
+      nextShiftByCircle.set(shift.circleId, shift);
+    }
+    if (
+      shift.assignedUserId === session.user.id &&
+      !myNextShiftByCircle.has(shift.circleId)
+    ) {
+      myNextShiftByCircle.set(shift.circleId, shift);
+    }
+  }
+
   return (
     <section className={styles.container}>
       <div className={styles.content}>
@@ -87,9 +133,6 @@ export default async function DashboardPage() {
               color='black'
               dotColor='purpleDot'
             />
-            {/* {memberships.length === 0
-              ? "Let's get you started."
-              : `You're part of ${memberships.length} ${memberships.length === 1 ? "circle" : "circles"}.`} */}
           </div>
           {memberships.length === 0 ? (
             <div className={styles.emptyState}>
@@ -117,53 +160,106 @@ export default async function DashboardPage() {
                     : "—";
                   const helperCount = m.circle._count.memberships;
 
+                  const circleNextShift = nextShiftByCircle.get(m.circle.id);
+                  const myNextShift = myNextShiftByCircle.get(m.circle.id);
+                  const isMineNext =
+                    circleNextShift?.assignedUserId === session.user.id;
+
                   return (
-                    <Link
-                      key={m.circle.id}
-                      href={`/circles/${m.circle.id}`}
-                      className={styles.circleCard}
-                    >
-                      <div className={styles.cardHeader}>
-                        <h3 className={styles.circleName}>{m.circle.name}</h3>
-                        <span className={styles.roleBadge}>{m.role}</span>
-                      </div>
+                    <div key={m.circle.id} className={styles.circleCard}>
+                      <Link
+                        href={`/circles/${m.circle.id}`}
+                        className={styles.cardBody}
+                      >
+                        <div className={styles.cardHeader}>
+                          <h3 className={styles.circleName}>
+                            {m.circle.name}
+                          </h3>
+                          <span className={styles.roleBadge}>{m.role}</span>
+                        </div>
 
-                      <div className={styles.cardRecipient}>
-                        <p className={styles.recipientLabel}>Recipient</p>
-                        <p className={styles.recipientName}>{recipientName}</p>
-                        {r && (
-                          <>
-                            <p className={styles.recipientContact}>
-                              {formatPhone(r.phone)}
-                            </p>
-                            <p className={styles.recipientContact}>{r.email}</p>
-                          </>
+                        <div className={styles.cardRecipient}>
+                          <p className={styles.recipientLabel}>Recipient</p>
+                          <p className={styles.recipientName}>
+                            {recipientName}
+                          </p>
+                          {r && (
+                            <>
+                              <p className={styles.recipientContact}>
+                                {formatPhone(r.phone)}
+                              </p>
+                              <p className={styles.recipientContact}>
+                                {r.email}
+                              </p>
+                            </>
+                          )}
+                        </div>
+
+                        <div className={styles.cardDetails}>
+                          <div className={styles.cardDetail}>
+                            <span className={styles.detailLabel}>Helpers</span>
+                            <span className={styles.detailValue}>
+                              {helperCount}
+                            </span>
+                          </div>
+                          <div className={styles.cardDetail}>
+                            <span className={styles.detailLabel}>Day</span>
+                            <span className={styles.detailValue}>
+                              {DAYS_OF_WEEK[m.circle.rotationDayOfWeek]}
+                            </span>
+                          </div>
+                          <div className={styles.cardDetail}>
+                            <span className={styles.detailLabel}>
+                              Frequency
+                            </span>
+                            <span className={styles.detailValue}>
+                              {m.circle.rotationCadence === "BIWEEKLY"
+                                ? "Biweekly"
+                                : "Weekly"}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+
+                      {/* Your next shift — prefer showing the user's own upcoming shift as a link */}
+                      {myNextShift && (
+                        <Link
+                          href={`/circles/${m.circle.id}/shifts/${myNextShift.id}`}
+                          className={styles.shiftLinkMine}
+                        >
+                          <div className={styles.shiftLinkContent}>
+                            <span className={styles.shiftLinkLabel}>
+                              {isMineNext
+                                ? "Your next shift"
+                                : "Your upcoming shift"}
+                            </span>
+                            <span className={styles.shiftLinkDate}>
+                              {formatShiftDate(
+                                new Date(myNextShift.scheduledDate),
+                              )}
+                            </span>
+                          </div>
+                          <span className={styles.shiftLinkArrow}>→</span>
+                        </Link>
+                      )}
+
+                      {/* Who's next in the circle — only shown if it's not the current user */}
+                      {circleNextShift &&
+                        !isMineNext &&
+                        circleNextShift.assignedUser && (
+                          <div className={styles.shiftInfo}>
+                            <span className={styles.shiftInfoLabel}>
+                              Next up
+                            </span>
+                            <span className={styles.shiftInfoValue}>
+                              {circleNextShift.assignedUser.firstName} ·{" "}
+                              {formatShiftDate(
+                                new Date(circleNextShift.scheduledDate),
+                              )}
+                            </span>
+                          </div>
                         )}
-                      </div>
-
-                      <div className={styles.cardDetails}>
-                        <div className={styles.cardDetail}>
-                          <span className={styles.detailLabel}>Helpers</span>
-                          <span className={styles.detailValue}>
-                            {helperCount}
-                          </span>
-                        </div>
-                        <div className={styles.cardDetail}>
-                          <span className={styles.detailLabel}>Day</span>
-                          <span className={styles.detailValue}>
-                            {DAYS_OF_WEEK[m.circle.rotationDayOfWeek]}
-                          </span>
-                        </div>
-                        <div className={styles.cardDetail}>
-                          <span className={styles.detailLabel}>Frequency</span>
-                          <span className={styles.detailValue}>
-                            {m.circle.rotationCadence === "BIWEEKLY"
-                              ? "Biweekly"
-                              : "Weekly"}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
+                    </div>
                   );
                 })}
               </div>

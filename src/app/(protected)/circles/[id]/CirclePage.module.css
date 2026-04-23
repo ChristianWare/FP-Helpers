@@ -89,6 +89,7 @@
   grid-template-columns: minmax(0, 1fr);
   grid-gap: 2rem;
 }
+
 .sectionTitle {
   font-size: 2rem;
   font-weight: 700;
@@ -133,7 +134,6 @@
   color: #111;
   overflow: hidden;
   text-overflow: ellipsis;
-  /* white-space: nowrap; */
 }
 
 .copyBtn {
@@ -279,10 +279,6 @@
   text-transform: uppercase;
   letter-spacing: normal;
   font-size: 16px;
-  /* font-size: 14px;
-  font-weight: 700;
-  color: var(--black);
-  margin-bottom: 4px; */
 }
 
 .fieldValue {
@@ -291,6 +287,127 @@
   margin: 0;
   line-height: 1.5;
 }
+
+/* ——— "This is you" helper card ——— */
+
+.sectionCardSelf {
+  background: var(--purple);
+  border-color: var(--purple);
+}
+
+.sectionCardSelf .fieldLabel {
+  color: var(--tan);
+  opacity: 0.85;
+}
+
+.sectionCardSelf .memberName,
+.sectionCardSelf .memberContact {
+  color: var(--white);
+}
+
+.sectionCardSelf .roleBadge {
+  background: var(--tan);
+  color: var(--purple);
+}
+
+.sectionCardSelf .rotationBadge {
+  background: var(--white);
+  color: var(--purple);
+}
+
+.memberContactSmall {
+  font-size: 14px;
+  color: #888;
+  margin: 4px 0 0;
+}
+
+.sectionCardSelf .memberContactSmall {
+  color: var(--tan);
+  opacity: 0.85;
+}
+
+/* ——— Your shifts section ——— */
+
+.shiftsGroupLabel {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #888;
+  margin: 0 0 10px;
+}
+
+.shiftsGroupLabel:not(:first-of-type) {
+  margin-top: 20px;
+}
+
+.shiftsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shiftRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--purple);
+  color: var(--tan);
+  border-radius: 10px;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+  gap: 12px;
+}
+
+.shiftRow:hover {
+  opacity: 0.9;
+}
+
+.shiftRowCompleted {
+  background: #fafafa;
+  color: #111;
+  border: 1px solid var(--gray);
+}
+
+.shiftRowCompleted:hover {
+  background: #f5f5f5;
+  opacity: 1;
+}
+
+.shiftRowMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.shiftRowDate {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: normal;
+}
+
+.shiftRowFullDate {
+  font-size: 14px;
+  opacity: 0.85;
+  font-weight: 500;
+}
+
+.shiftRowStatus {
+  font-size: 14px;
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.shiftRowArrow {
+  font-size: 20px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ——— Responsive ——— */
 
 @media screen and (max-width: 568px) {
   .title {

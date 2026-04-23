@@ -1,5 +1,5 @@
 // app/(protected)/circles/[id]/page.tsx
-import { auth } from "../../../../../auth"; 
+import { auth } from "../../../../../auth";
 import { db } from "@/lib/db";
 import { redirect, notFound } from "next/navigation";
 import CirclePage from "./CirclePage.tsx";
@@ -67,6 +67,55 @@ export default async function Page({
     ? `${baseUrl}/join/${circle.joinLinks[0].token}`
     : null;
 
+  // Find the next upcoming shift for each helper
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const upcomingShifts = await db.shift.findMany({
+    where: {
+      circleId: circle.id,
+      scheduledDate: { gte: today },
+      status: { in: ["SCHEDULED", "IN_PROGRESS"] },
+      assignedUserId: { not: null },
+    },
+    orderBy: { scheduledDate: "asc" },
+    select: {
+      assignedUserId: true,
+      scheduledDate: true,
+    },
+  });
+
+  // Build a map of userId → earliest upcoming shift date
+  const nextShiftByHelper: Record<string, string> = {};
+  for (const shift of upcomingShifts) {
+    if (shift.assignedUserId && !nextShiftByHelper[shift.assignedUserId]) {
+      nextShiftByHelper[shift.assignedUserId] =
+        shift.scheduledDate.toISOString();
+    }
+  }
+
+  // Fetch the current user's upcoming + recent shifts for this circle
+  const myUpcomingShifts = await db.shift.findMany({
+    where: {
+      circleId: circleId,
+      assignedUserId: session.user.id,
+      scheduledDate: { gte: today },
+      status: { in: ["SCHEDULED", "IN_PROGRESS"] },
+    },
+    orderBy: { scheduledDate: "asc" },
+    take: 5,
+  });
+
+  const myRecentShifts = await db.shift.findMany({
+    where: {
+      circleId: circleId,
+      assignedUserId: session.user.id,
+      status: "COMPLETED",
+    },
+    orderBy: { scheduledDate: "desc" },
+    take: 3,
+  });
+
   return (
     <CirclePage
       circle={{
@@ -85,9 +134,22 @@ export default async function Page({
         inRotation: m.inRotation,
         user: m.user,
       }))}
+      currentUserId={session.user.id!}
       currentUserRole={membership?.role ?? null}
       joinUrl={joinUrl}
       justCreated={justCreated}
+      nextShiftByHelper={nextShiftByHelper}
+      myUpcomingShifts={myUpcomingShifts.map((s) => ({
+        id: s.id,
+        scheduledDate: s.scheduledDate.toISOString(),
+        status: s.status,
+      }))}
+      myRecentShifts={myRecentShifts.map((s) => ({
+        id: s.id,
+        scheduledDate: s.scheduledDate.toISOString(),
+        status: s.status,
+        completedAt: s.completedAt?.toISOString() ?? null,
+      }))}
     />
   );
 }

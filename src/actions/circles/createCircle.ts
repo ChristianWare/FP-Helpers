@@ -11,7 +11,10 @@ import { generateToken } from "@/lib/tokens";
 import { getUserByEmail } from "@/lib/user";
 import { Resend } from "resend";
 import { buildCircleWelcomeEmail } from "@/lib/emails/circleWelcome";
-import { ensureShiftsForCircle } from "@/lib/shifts/generateShifts";
+import {
+  ensureShiftsForCircle,
+  rebalanceShiftsForCircle,
+} from "@/lib/shifts/generateShifts";
 import bcryptjs from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
@@ -145,9 +148,11 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
     };
   }
 
-  // 7. Generate the first 8 weeks of shifts now that memberships exist
+  // 7. Generate the first 8 weeks of shifts now that memberships exist,
+  //    then rebalance so everyone in rotation is slotted in correctly.
   try {
     await ensureShiftsForCircle(circleId);
+    await rebalanceShiftsForCircle(circleId);
   } catch (err) {
     console.error("[createCircle] Failed to generate initial shifts:", err);
     // Don't fail circle creation if shift generation has an issue

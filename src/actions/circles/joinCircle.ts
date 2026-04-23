@@ -5,7 +5,10 @@ import { db } from "@/lib/db";
 import { getUserByEmail } from "@/lib/user";
 import { RegisterSchema, RegisterSchemaType } from "@/schemas/RegisterSchema";
 import { signIn } from "../../../auth";
-import { ensureShiftsForCircle } from "@/lib/shifts/generateShifts";
+import {
+  ensureShiftsForCircle,
+  rebalanceShiftsForCircle,
+} from "@/lib/shifts/generateShifts";
 import bcryptjs from "bcryptjs";
 import { AuthError } from "next-auth";
 
@@ -85,10 +88,11 @@ export const joinCircle = async (token: string, values: RegisterSchemaType) => {
     });
   });
 
-  // Extend the shift schedule to pick up the new helper
-  // (existing shifts stay as-is; future shifts include them)
+  // Extend the shift schedule to pick up the new helper, then rebalance
+  // so existing future shifts get reassigned round-robin with the new roster.
   try {
     await ensureShiftsForCircle(joinLink.circleId);
+    await rebalanceShiftsForCircle(joinLink.circleId);
   } catch (err) {
     console.error("[joinCircle] Failed to regenerate shifts:", err);
   }

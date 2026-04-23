@@ -109,22 +109,31 @@
   margin-bottom: 4rem;
 }
 
+/* ——— Circle card ——— */
+
 .circleCard {
   background: #fff;
   border: 1px solid #eee;
   border-radius: 12px;
-  padding: 24px;
-  text-decoration: none;
-  color: inherit;
+  overflow: hidden;
   transition: all 0.15s;
   display: flex;
   flex-direction: column;
-  gap: 16px;
 }
 
 .circleCard:hover {
   border-color: var(--purple);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.cardBody {
+  padding: 24px;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
 }
 
 /* ——— Card header ——— */
@@ -218,6 +227,77 @@
   font-weight: 700;
   letter-spacing: normal;
   color: #111;
+}
+
+/* ——— Shift footer — the helper's own shift link ——— */
+
+.shiftLinkMine {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: var(--purple);
+  color: var(--tan);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+  border-top: 1px solid var(--purple);
+}
+
+.shiftLinkMine:hover {
+  opacity: 0.9;
+}
+
+.shiftLinkContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shiftLinkLabel {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.shiftLinkDate {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: normal;
+}
+
+.shiftLinkArrow {
+  font-size: 22px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ——— Shift footer — informational only ——— */
+
+.shiftInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+  background: #fafafa;
+  border-top: 1px solid #eee;
+  gap: 12px;
+}
+
+.shiftInfoLabel {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #888;
+}
+
+.shiftInfoValue {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111;
+  text-align: right;
 }
 
 /* ——— Create more ——— */
@@ -318,5 +398,11 @@
     align-items: flex-start;
     justify-content: flex-start;
     text-align-last: left;
+  }
+
+  .shiftLinkMine,
+  .shiftInfo {
+    padding-left: 18px;
+    padding-right: 18px;
   }
 }
