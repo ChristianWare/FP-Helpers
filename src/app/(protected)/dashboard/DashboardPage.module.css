@@ -35,6 +35,31 @@
   margin: 0;
 }
 
+/* ——— Account actions: Profile + Sign out ——— */
+
+.accountActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.profileLink {
+  padding: 8px 16px;
+  background: none;
+  border: 1px solid var(--purple);
+  border-radius: 6px;
+  color: var(--purple);
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.profileLink:hover {
+  background-color: var(--purple);
+  color: var(--tan);
+}
+
 .signOutBtn {
   padding: 8px 16px;
   background: none;
@@ -239,7 +264,6 @@
   color: #111;
 }
 
-/* Duration cell — slightly smaller text to fit "3 weeks left" */
 .detailValueDuration {
   font-size: 14px;
   color: var(--purple);
@@ -422,6 +446,11 @@
     width: 100%;
   }
 
+  .accountActions {
+    justify-content: center;
+    width: 100%;
+  }
+
   .userEmail {
     order: -1;
   }
@@ -431,7 +460,8 @@
     width: 100%;
   }
 
-  .signOutBtn {
+  .signOutBtn,
+  .profileLink {
     padding: 6px 12px;
     font-size: 16px;
   }

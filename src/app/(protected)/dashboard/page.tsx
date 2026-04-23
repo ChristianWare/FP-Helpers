@@ -17,7 +17,6 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  // If this user is a recipient on any circle, send them to /my-circle
   const recipientMembership = await db.circleMembership.findFirst({
     where: {
       userId: session.user.id,
@@ -30,7 +29,6 @@ export default async function DashboardPage() {
     redirect("/my-circle");
   }
 
-  // Fetch circles the user is a member of
   const memberships = await db.circleMembership.findMany({
     where: { userId: session.user.id, active: true },
     include: {
@@ -57,7 +55,6 @@ export default async function DashboardPage() {
     orderBy: { joinedAt: "desc" },
   });
 
-  // Fetch the next upcoming shift for each circle
   const circleIds = memberships.map((m) => m.circleId);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -109,16 +106,21 @@ export default async function DashboardPage() {
               <h1 className={styles.title}>Hi {session.user.firstName}</h1>
             </div>
             <div className={styles.accountInfo}>
-              <form
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: "/login" });
-                }}
-              >
-                <button type='submit' className={styles.signOutBtn}>
-                  Sign out
-                </button>
-              </form>
+              <div className={styles.accountActions}>
+                <Link href='/profile' className={styles.profileLink}>
+                  Profile
+                </Link>
+                <form
+                  action={async () => {
+                    "use server";
+                    await signOut({ redirectTo: "/login" });
+                  }}
+                >
+                  <button type='submit' className={styles.signOutBtn}>
+                    Sign out
+                  </button>
+                </form>
+              </div>
               <p className={styles.userEmail}>{session.user.email}</p>
             </div>
           </header>
@@ -235,7 +237,6 @@ export default async function DashboardPage() {
                         </div>
                       </Link>
 
-                      {/* Your next shift */}
                       {myNextShift && !isArchived && (
                         <Link
                           href={`/circles/${m.circle.id}/shifts/${myNextShift.id}`}
@@ -257,7 +258,6 @@ export default async function DashboardPage() {
                         </Link>
                       )}
 
-                      {/* Who's next in the circle */}
                       {circleNextShift &&
                         !isMineNext &&
                         !isArchived &&
@@ -275,7 +275,6 @@ export default async function DashboardPage() {
                           </div>
                         )}
 
-                      {/* Archived footer */}
                       {isArchived && (
                         <div className={styles.archivedFooter}>
                           <span className={styles.archivedIcon}>✓</span>
