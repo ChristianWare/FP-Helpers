@@ -1,12 +1,21 @@
 // components/auth/RegistrationForm.tsx
 "use client";
 
+import styles from "./RegistrationForm.module.css";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { RegisterSchema, RegisterSchemaType } from "@/schemas/RegisterSchema";
-import styles from "./RegistrationForm.module.css";
+
+function formatPhoneNumber(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 10);
+
+  if (digits.length === 0) return "";
+  if (digits.length <= 3) return `(${digits}`;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
 
 type Props = {
   // What server action to call — register (plain signup) or joinCircle (signup + add to circle)
@@ -35,6 +44,7 @@ export default function RegistrationForm({
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<RegisterSchemaType>({
     resolver: zodResolver(RegisterSchema),
@@ -140,6 +150,10 @@ export default function RegistrationForm({
           placeholder='(555) 123-4567'
           autoComplete='tel'
           {...register("phone")}
+          onChange={(e) => {
+            const formatted = formatPhoneNumber(e.target.value);
+            setValue("phone", formatted, { shouldValidate: true });
+          }}
         />
         <span className={styles.helpText}>
           So the person you&apos;re helping can reach you on the day.

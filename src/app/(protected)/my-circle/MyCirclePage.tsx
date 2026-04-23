@@ -373,10 +373,10 @@ export default function MyCirclePage({
           {/* This week's helper */}
           {thisWeekShift && thisWeekShift.helper && (
             <section className={styles.thisWeekBanner}>
-              <p className={styles.thisWeekLabel}>This Week:</p>
+              {/* <p className={styles.thisWeekLabel}>This Week:</p> */}
               <h2 className={styles.thisWeekHelper}>
                 {thisWeekShift.helper.firstName} {thisWeekShift.helper.lastName}{" "}
-                is coming by
+                will be assisting this week
               </h2>
               <p className={styles.thisWeekDate}>
                 {formatShiftFullDate(new Date(thisWeekShift.scheduledDate))}
@@ -486,7 +486,7 @@ export default function MyCirclePage({
                 />
                 <div className={styles.addFormRow}>
                   <select
-                    className={styles.inputMedium}
+                    className={styles.inputLarge}
                     value={itemQuantity}
                     onChange={(e) => setItemQuantity(e.target.value)}
                   >
@@ -558,7 +558,7 @@ export default function MyCirclePage({
                       />
                       <div className={styles.addFormRow}>
                         <select
-                          className={styles.inputMedium}
+                          className={styles.inputLarge}
                           value={editItemQuantity}
                           onChange={(e) => setEditItemQuantity(e.target.value)}
                         >
@@ -672,7 +672,7 @@ export default function MyCirclePage({
                       <div className={styles.addFormRow}>
                         <input
                           type='text'
-                          className={styles.inputMedium}
+                          className={styles.inputLarge}
                           placeholder='Quantity (optional)'
                           value={editItemQuantity}
                           onChange={(e) => setEditItemQuantity(e.target.value)}
@@ -779,14 +779,14 @@ export default function MyCirclePage({
                       <div className={styles.addFormRow}>
                         <input
                           type='text'
-                          className={styles.inputMedium}
+                          className={styles.inputLarge}
                           placeholder='Pharmacy name (optional)'
                           value={editRxPharmacy}
                           onChange={(e) => setEditRxPharmacy(e.target.value)}
                         />
                         <input
                           type='tel'
-                          className={styles.inputMedium}
+                          className={styles.inputLarge}
                           placeholder='Pharmacy phone (optional)'
                           value={editRxPharmacyPhone}
                           onChange={(e) =>
@@ -879,14 +879,14 @@ export default function MyCirclePage({
                 <div className={styles.addFormRow}>
                   <input
                     type='text'
-                    className={styles.inputMedium}
+                    className={styles.inputLarge}
                     placeholder='Pharmacy name (optional)'
                     value={rxPharmacy}
                     onChange={(e) => setRxPharmacy(e.target.value)}
                   />
                   <input
                     type='tel'
-                    className={styles.inputMedium}
+                    className={styles.inputLarge}
                     placeholder='Pharmacy phone (optional)'
                     value={rxPharmacyPhone}
                     onChange={(e) =>

@@ -123,12 +123,13 @@
 
 .thisWeekLabel,
 .thisWeekDate {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   margin: 0 0 10px;
-  color: var(--white);
+  color: var(--green3);
+  font-family: var(--VisbyCF);
 }
 
 .thisWeekHelper {
@@ -142,7 +143,7 @@
 
 .thisWeekDate {
   margin: 0 0 20px;
-  color: var(--white);
+  color: var(--green3);
 }
 
 .thisWeekPhone {
