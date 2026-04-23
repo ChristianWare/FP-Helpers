@@ -1,14 +1,15 @@
 // app/(protected)/dashboard/page.tsx
+import styles from "./DashboardPage.module.css";
 import { auth, signOut } from "../../../../auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import Link from "next/link";
-import styles from "./DashboardPage.module.css";
 import LayoutWrapper from "@/components/shared/LayoutWrapper";
 import Button from "@/components/shared/Button/Button";
 import { formatPhone } from "@/lib/format";
 import SectionHeading from "@/components/shared/SectionHeading/SectionHeading";
 import { formatShiftDate } from "@/lib/shifts/formatShift";
+import { formatCircleDuration } from "@/lib/circles/formatDuration";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -56,7 +57,7 @@ export default async function DashboardPage() {
     orderBy: { joinedAt: "desc" },
   });
 
-  // Fetch the next upcoming shift for each circle (one query for all of them)
+  // Fetch the next upcoming shift for each circle
   const circleIds = memberships.map((m) => m.circleId);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -78,8 +79,6 @@ export default async function DashboardPage() {
         })
       : [];
 
-  // Two maps: one for the circle's next shift (anyone),
-  // one for the logged-in user's own next shift in each circle
   const nextShiftByCircle = new Map<
     string,
     (typeof upcomingShifts)[number]
@@ -165,8 +164,19 @@ export default async function DashboardPage() {
                   const isMineNext =
                     circleNextShift?.assignedUserId === session.user.id;
 
+                  const durationLabel = formatCircleDuration({
+                    durationType: m.circle.durationType,
+                    startDate: m.circle.startDate,
+                    endDate: m.circle.endDate,
+                  });
+
+                  const isArchived = m.circle.status === "ARCHIVED";
+
                   return (
-                    <div key={m.circle.id} className={styles.circleCard}>
+                    <div
+                      key={m.circle.id}
+                      className={`${styles.circleCard} ${isArchived ? styles.circleCardArchived : ""}`}
+                    >
                       <Link
                         href={`/circles/${m.circle.id}`}
                         className={styles.cardBody}
@@ -175,7 +185,9 @@ export default async function DashboardPage() {
                           <h3 className={styles.circleName}>
                             {m.circle.name}
                           </h3>
-                          <span className={styles.roleBadge}>{m.role}</span>
+                          <span className={styles.roleBadge}>
+                            {isArchived ? "ARCHIVED" : m.role}
+                          </span>
                         </div>
 
                         <div className={styles.cardRecipient}>
@@ -210,19 +222,21 @@ export default async function DashboardPage() {
                           </div>
                           <div className={styles.cardDetail}>
                             <span className={styles.detailLabel}>
-                              Frequency
-                            </span>
-                            <span className={styles.detailValue}>
                               {m.circle.rotationCadence === "BIWEEKLY"
                                 ? "Biweekly"
                                 : "Weekly"}
+                            </span>
+                            <span
+                              className={`${styles.detailValue} ${styles.detailValueDuration}`}
+                            >
+                              {durationLabel}
                             </span>
                           </div>
                         </div>
                       </Link>
 
-                      {/* Your next shift — prefer showing the user's own upcoming shift as a link */}
-                      {myNextShift && (
+                      {/* Your next shift */}
+                      {myNextShift && !isArchived && (
                         <Link
                           href={`/circles/${m.circle.id}/shifts/${myNextShift.id}`}
                           className={styles.shiftLinkMine}
@@ -243,9 +257,10 @@ export default async function DashboardPage() {
                         </Link>
                       )}
 
-                      {/* Who's next in the circle — only shown if it's not the current user */}
+                      {/* Who's next in the circle */}
                       {circleNextShift &&
                         !isMineNext &&
+                        !isArchived &&
                         circleNextShift.assignedUser && (
                           <div className={styles.shiftInfo}>
                             <span className={styles.shiftInfoLabel}>
@@ -259,6 +274,16 @@ export default async function DashboardPage() {
                             </span>
                           </div>
                         )}
+
+                      {/* Archived footer */}
+                      {isArchived && (
+                        <div className={styles.archivedFooter}>
+                          <span className={styles.archivedIcon}>✓</span>
+                          <span className={styles.archivedText}>
+                            This circle has finished
+                          </span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

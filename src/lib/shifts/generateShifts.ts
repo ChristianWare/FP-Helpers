@@ -1,20 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // lib/shifts/generateShifts.ts
 import { db } from "@/lib/db";
-import {
-  addDays,
-  addWeeks,
-  setHours,
-  setMinutes,
-  setSeconds,
-  setMilliseconds,
-  startOfDay,
-} from "date-fns";
+import { addDays, addWeeks, startOfDay } from "date-fns";
 
-/**
- * Compute the date of the next occurrence of a given day of week (0 = Sunday, 6 = Saturday),
- * starting from `fromDate`. If fromDate IS that day of week, returns fromDate itself.
- */
 function nextDayOfWeek(fromDate: Date, targetDayOfWeek: number): Date {
   const currentDay = fromDate.getDay();
   const daysUntilTarget = (targetDayOfWeek - currentDay + 7) % 7;
@@ -22,16 +9,9 @@ function nextDayOfWeek(fromDate: Date, targetDayOfWeek: number): Date {
   return startOfDay(result);
 }
 
-/**
- * Ensure a circle has scheduled shifts for the next N weeks (default 8).
- * Uses strict round-robin order based on CircleMembership.rotationOrder.
- * Idempotent: existing shifts are not duplicated.
- *
- * Returns the count of shifts created.
- */
 export async function ensureShiftsForCircle(
   circleId: string,
-  lookaheadWeeks: number = 8,
+  lookaheadWeeks: number = 16,
 ): Promise<number> {
   const circle = await db.careCircle.findUnique({
     where: { id: circleId },
@@ -51,25 +31,34 @@ export async function ensureShiftsForCircle(
   });
 
   if (!circle) return 0;
+  if (circle.status !== "ACTIVE") return 0; // don't generate for archived/paused circles
 
   const helpers = circle.memberships;
-  if (helpers.length === 0) {
-    // No one in rotation — can't generate shifts
-    return 0;
-  }
+  if (helpers.length === 0) return 0;
 
-  // Figure out the date window we need to fill
   const today = startOfDay(new Date());
   const firstShiftDate = nextDayOfWeek(today, circle.rotationDayOfWeek);
 
-  // Generate target dates for the next N weeks
+  // Generate target dates for the next N weeks (or until endDate, whichever comes first)
   const targetDates: Date[] = [];
   for (let i = 0; i < lookaheadWeeks; i++) {
     const weekOffset = circle.rotationCadence === "BIWEEKLY" ? i * 2 : i;
-    targetDates.push(addWeeks(firstShiftDate, weekOffset));
+    const candidateDate = addWeeks(firstShiftDate, weekOffset);
+
+    // Clamp to endDate if this is a FIXED-duration circle
+    if (
+      circle.durationType === "FIXED" &&
+      circle.endDate &&
+      candidateDate > circle.endDate
+    ) {
+      break;
+    }
+
+    targetDates.push(candidateDate);
   }
 
-  // Fetch existing shifts in this window to avoid duplicates
+  if (targetDates.length === 0) return 0;
+
   const existingShifts = await db.shift.findMany({
     where: {
       circleId,
@@ -86,8 +75,6 @@ export async function ensureShiftsForCircle(
     existingShifts.map((s) => s.scheduledDate.toISOString().split("T")[0]),
   );
 
-  // Determine starting index in the rotation.
-  // We look at the LAST existing shift (if any) and continue from the next helper.
   let rotationIndex = 0;
   if (existingShifts.length > 0) {
     const lastShift = existingShifts[existingShifts.length - 1];
@@ -99,7 +86,6 @@ export async function ensureShiftsForCircle(
     }
   }
 
-  // Build the list of shifts to create
   const toCreate: {
     circleId: string;
     scheduledDate: Date;
@@ -125,21 +111,11 @@ export async function ensureShiftsForCircle(
 
   if (toCreate.length === 0) return 0;
 
-  await db.shift.createMany({
-    data: toCreate,
-  });
+  await db.shift.createMany({ data: toCreate });
 
   return toCreate.length;
 }
 
-/**
- * Reassigns all future SCHEDULED shifts to match the current rotation order.
- * Call this after adding or removing a helper so new shifts reflect the updated roster.
- * Does NOT touch completed, in-progress, missed, or swapped shifts — those stay
- * with whoever actually handled (or was supposed to handle) them.
- *
- * Returns the count of shifts that were updated.
- */
 export async function rebalanceShiftsForCircle(
   circleId: string,
 ): Promise<number> {

@@ -1,0 +1,147 @@
+/* components/swaps/RequestSwapModal.module.css */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.05),
+    0 20px 25px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: var(--purple);
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: #555;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+.field {
+  margin-bottom: 24px;
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 8px;
+  letter-spacing: normal;
+}
+
+.textarea {
+  width: 100%;
+  padding: 14px;
+  font-size: 15px;
+  border: 1px solid var(--gray);
+  border-radius: 10px;
+  background: #fff;
+  color: #111;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--purple);
+}
+
+.hint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #888;
+  line-height: 1.4;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.cancelBtn {
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #555;
+  background: none;
+  border: 1px solid var(--gray);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cancelBtn:hover:not(:disabled) {
+  border-color: #111;
+  color: #111;
+}
+
+.submitBtn {
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 700;
+  background: var(--purple);
+  color: var(--tan);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.submitBtn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.submitBtn:disabled,
+.cancelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

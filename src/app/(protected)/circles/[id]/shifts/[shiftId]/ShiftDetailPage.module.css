@@ -137,6 +137,78 @@
   }
 }
 
+/* ——— Swap request banner ——— */
+
+.swapBanner {
+  margin-bottom: 2rem;
+  padding: 24px;
+  background: #fefce8;
+  border: 1px solid #fde047;
+  border-radius: 16px;
+}
+
+.swapBannerHeader {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.swapBannerIcon {
+  font-size: 24px;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.swapBannerTitle {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: #713f12;
+  margin: 0 0 4px;
+}
+
+.swapBannerSubtitle {
+  font-size: 15px;
+  color: #854d0e;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.swapBannerReason {
+  padding: 12px 16px;
+  background: #fff;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #555;
+  line-height: 1.5;
+  margin: 12px 0;
+}
+
+.swapCancelBtn {
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: normal;
+  background: #fff;
+  color: #854d0e;
+  border: 1px solid #fde047;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-top: 4px;
+}
+
+.swapCancelBtn:hover:not(:disabled) {
+  background: #fef9c3;
+  border-color: #854d0e;
+}
+
+.swapCancelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ——— Sections ——— */
 
 .section {
@@ -344,6 +416,29 @@
   cursor: not-allowed;
 }
 
+/* ——— "Can't make it?" request button ——— */
+
+.swapRequestBtn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: normal;
+  background: #fff;
+  color: var(--purple);
+  border: 1px dashed var(--purple);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.swapRequestBtn:hover:not(:disabled) {
+  background: var(--purple);
+  color: var(--tan);
+  border-style: solid;
+}
+
 .completedNote {
   font-size: 15px;
   color: #166534;
@@ -400,6 +495,105 @@
   color: #888;
   margin: 2px 0 0;
   line-height: 1.4;
+}
+
+/* ——— Notification log ——— */
+
+.notificationList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.notificationRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #fafafa;
+  border: 1px solid var(--gray);
+  border-radius: 10px;
+}
+
+.notificationRowFailed {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.notificationIcon {
+  font-size: 20px;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.notificationBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.notificationLabel {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111;
+  margin: 0 0 2px;
+  letter-spacing: normal;
+}
+
+.notificationMeta {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.notificationRowFailed .notificationMeta {
+  color: #991b1b;
+}
+
+/* ——— Test reminder block ——— */
+
+.testReminderBlock {
+  padding: 16px;
+  background: #f7f3ec;
+  border: 1px dashed var(--purple);
+  border-radius: 10px;
+  margin-top: 16px;
+}
+
+.testReminderLabel {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 12px;
+  font-style: italic;
+}
+
+.testReminderButtons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.testReminderBtn {
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  background: #fff;
+  color: var(--purple);
+  border: 1px solid var(--purple);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.testReminderBtn:hover:not(:disabled) {
+  background: var(--purple);
+  color: var(--tan);
+}
+
+.testReminderBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ——— Emergency contact ——— */
@@ -476,4 +670,67 @@
     padding: 6px 12px;
     font-size: 16px;
   }
+}
+
+
+/* ——— Swap banner variant: someone else needs cover (claimable) ——— */
+
+.swapBannerClaim {
+  margin-bottom: 2rem;
+  padding: 24px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1px solid #86efac;
+  border-radius: 16px;
+}
+
+.swapBannerClaim .swapBannerTitle {
+  color: #14532d;
+  font-size: 20px;
+}
+
+.swapBannerClaim .swapBannerSubtitle {
+  color: #166534;
+}
+
+.swapClaimBtn {
+  width: 100%;
+  padding: 16px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: normal;
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  margin-top: 8px;
+}
+
+.swapClaimBtn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.swapClaimBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ——— Swap banner variant: read-only info (not the requester, not eligible) ——— */
+
+.swapBannerInfo {
+  margin-bottom: 2rem;
+  padding: 20px 24px;
+  background: #f7f7f8;
+  border: 1px solid #e5e5e5;
+  border-radius: 16px;
+}
+
+.swapBannerInfo .swapBannerTitle {
+  color: #111;
+  font-size: 17px;
+}
+
+.swapBannerInfo .swapBannerSubtitle {
+  color: #666;
 }

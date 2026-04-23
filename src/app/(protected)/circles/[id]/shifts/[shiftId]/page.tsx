@@ -34,11 +34,37 @@ export default async function Page({
 
   const isAssignedHelper = shift.assignedUserId === session.user.id;
 
+  // Determine if the current user is eligible to claim a swap on this shift
+  //   - Must be an active, in-rotation helper or admin
+  //   - Must NOT be the currently assigned helper
+  //   - Must NOT be the one who requested the swap
+  const isEligibleClaimer =
+    !!membership &&
+    membership.active &&
+    membership.inRotation &&
+    (membership.role === "HELPER" || membership.role === "ADMIN") &&
+    !isAssignedHelper;
+
+  // Count other in-rotation helpers — for swap modal messaging
+  const otherHelperCount = await db.circleMembership.count({
+    where: {
+      circleId,
+      active: true,
+      inRotation: true,
+      role: { in: ["ADMIN", "HELPER"] },
+      userId: { not: session.user.id },
+    },
+  });
+
+  const openSwapRequest = shift.swapRequests[0] ?? null;
+
   return (
     <ShiftDetailPage
+      currentUserId={session.user.id!}
       currentUserName={session.user.firstName ?? "there"}
       currentUserEmail={session.user.email ?? ""}
       isAssignedHelper={isAssignedHelper}
+      isEligibleClaimer={isEligibleClaimer}
       shift={{
         id: shift.id,
         scheduledDate: shift.scheduledDate.toISOString(),
@@ -74,6 +100,30 @@ export default async function Page({
         pharmacyAddress: rx.defaultPharmacy?.address ?? null,
         notes: rx.notes,
       }))}
+      notifications={shift.notifications.map((n) => ({
+        id: n.id,
+        template: n.template,
+        channel: n.channel,
+        status: n.status,
+        sentAt: n.sentAt?.toISOString() ?? null,
+        createdAt: n.createdAt.toISOString(),
+        error: n.error,
+      }))}
+      otherHelperCount={otherHelperCount}
+      openSwapRequest={
+        openSwapRequest
+          ? {
+              id: openSwapRequest.id,
+              reason: openSwapRequest.reason,
+              createdAt: openSwapRequest.createdAt.toISOString(),
+              requestedBy: {
+                id: openSwapRequest.requestedBy.id,
+                firstName: openSwapRequest.requestedBy.firstName,
+                lastName: openSwapRequest.requestedBy.lastName,
+              },
+            }
+          : null
+      }
     />
   );
 }

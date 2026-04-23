@@ -126,6 +126,16 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+.circleCardArchived {
+  opacity: 0.7;
+}
+
+.circleCardArchived:hover {
+  opacity: 1;
+  border-color: #d4d4d8;
+  box-shadow: none;
+}
+
 .cardBody {
   padding: 24px;
   text-decoration: none;
@@ -229,6 +239,12 @@
   color: #111;
 }
 
+/* Duration cell — slightly smaller text to fit "3 weeks left" */
+.detailValueDuration {
+  font-size: 14px;
+  color: var(--purple);
+}
+
 /* ——— Shift footer — the helper's own shift link ——— */
 
 .shiftLinkMine {
@@ -298,6 +314,38 @@
   font-weight: 600;
   color: #111;
   text-align: right;
+}
+
+/* ——— Archived footer ——— */
+
+.archivedFooter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  background: #f0fdf4;
+  border-top: 1px solid #bbf7d0;
+}
+
+.archivedIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: #16a34a;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.archivedText {
+  font-size: 14px;
+  font-weight: 600;
+  color: #166534;
+  letter-spacing: normal;
 }
 
 /* ——— Create more ——— */

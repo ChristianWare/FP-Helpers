@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/incompatible-library */
 // app/(protected)/create-circle/CreateCirclePage.tsx
 "use client";
 
@@ -15,10 +16,8 @@ import styles from "./CreateCirclePage.module.css";
 import LayoutWrapper from "@/components/shared/LayoutWrapper";
 import toast from "react-hot-toast";
 
-
 function formatPhoneNumber(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 10);
-
   if (digits.length === 0) return "";
   if (digits.length <= 3) return `(${digits}`;
   if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
@@ -34,6 +33,21 @@ const DAYS_OF_WEEK = [
   { value: 5, label: "Friday" },
   { value: 6, label: "Saturday" },
 ];
+
+// Arrival time options — 7am through 9pm in 30-min increments
+const ARRIVAL_TIMES = (() => {
+  const times: { value: string; label: string }[] = [];
+  for (let hour = 7; hour <= 21; hour++) {
+    for (const min of [0, 30]) {
+      const period = hour < 12 ? "am" : "pm";
+      const displayHour = hour === 12 ? 12 : hour > 12 ? hour - 12 : hour;
+      const minStr = min === 0 ? "00" : "30";
+      const label = `${displayHour}:${minStr} ${period}`;
+      times.push({ value: label, label });
+    }
+  }
+  return times;
+})();
 
 const STEPS = [
   {
@@ -62,14 +76,20 @@ const STEPS = [
     number: 4,
   },
   {
+    id: "duration",
+    title: "How long will this run?",
+    subtitle:
+      "Ongoing is the default. Pick a timeframe if this is for a set period (e.g. 6 weeks of post-surgery help).",
+    number: 5,
+  },
+  {
     id: "confirm",
     title: "Almost there",
     subtitle: "One last thing before we set everything up.",
-    number: 5,
+    number: 6,
   },
 ];
 
-// Fields to validate per step before allowing "Next"
 const STEP_FIELDS: Record<number, (keyof CreateCircleSchemaType)[]> = {
   0: ["circleName"],
   1: [
@@ -82,7 +102,8 @@ const STEP_FIELDS: Record<number, (keyof CreateCircleSchemaType)[]> = {
   ],
   2: [],
   3: ["rotationDayOfWeek", "rotationCadence"],
-  4: ["organizerInRotation"],
+  4: ["durationType", "startDate", "endDate"],
+  5: ["organizerInRotation"],
 };
 
 type Props = {
@@ -102,16 +123,20 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
     handleSubmit,
     trigger,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<CreateCircleSchemaType>({
     resolver: zodResolver(CreateCircleSchema),
     defaultValues: {
       rotationDayOfWeek: 6,
       rotationCadence: "WEEKLY",
+      durationType: "INDEFINITE",
       organizerInRotation: true,
     },
     mode: "onTouched",
   });
+
+  const durationType = watch("durationType");
 
   const goToStep = useCallback(
     async (targetStep: number) => {
@@ -159,7 +184,6 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
     }
   };
 
-  // Helper: surface validation errors if they exist on hidden steps
   const onInvalid = (formErrors: typeof errors) => {
     const errorFields = Object.keys(formErrors);
     if (errorFields.length > 0) {
@@ -172,6 +196,9 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
   const step = STEPS[currentStep];
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === STEPS.length - 1;
+
+  // Today's date for min attribute on date inputs
+  const todayIso = new Date().toISOString().split("T")[0];
 
   return (
     <div className={styles.page}>
@@ -245,7 +272,7 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
                     </div>
                   )}
 
-                  {/* Step 2: Recipient info */}
+                  {/* Step 2: Recipient */}
                   {currentStep === 1 && (
                     <div className={styles.fields}>
                       <div className={styles.row}>
@@ -270,7 +297,6 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
                             </span>
                           )}
                         </div>
-
                         <div className={styles.field}>
                           <label
                             className={styles.label}
@@ -369,7 +395,6 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
                             </span>
                           )}
                         </div>
-
                         <div className={styles.field}>
                           <label
                             className={styles.label}
@@ -467,7 +492,6 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
                             </span>
                           )}
                         </div>
-
                         <div className={styles.field}>
                           <label
                             className={styles.label}
@@ -499,13 +523,18 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
                           Typical arrival time{" "}
                           <span className={styles.optional}>(optional)</span>
                         </label>
-                        <input
+                        <select
                           id='typicalArrivalTime'
-                          type='text'
                           className={`${styles.input} ${errors.typicalArrivalTime ? styles.inputError : ""}`}
-                          placeholder='around 10am'
                           {...register("typicalArrivalTime")}
-                        />
+                        >
+                          <option value=''>Not sure yet</option>
+                          {ARRIVAL_TIMES.map((t) => (
+                            <option key={t.value} value={t.value}>
+                              {t.label}
+                            </option>
+                          ))}
+                        </select>
                         {errors.typicalArrivalTime && (
                           <span className={styles.fieldError}>
                             {errors.typicalArrivalTime.message}
@@ -515,8 +544,91 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
                     </div>
                   )}
 
-                  {/* Step 5: Confirm */}
+                  {/* Step 5: Duration */}
                   {currentStep === 4 && (
+                    <div className={styles.fields}>
+                      <div className={styles.radioGroup}>
+                        <label
+                          className={`${styles.radioOption} ${durationType === "INDEFINITE" ? styles.radioOptionActive : ""}`}
+                        >
+                          <input
+                            type='radio'
+                            value='INDEFINITE'
+                            className={styles.radioInput}
+                            {...register("durationType")}
+                          />
+                          <div className={styles.radioContent}>
+                            <p className={styles.radioTitle}>Ongoing</p>
+                            <p className={styles.radioDescription}>
+                              The circle continues indefinitely. New shifts get
+                              scheduled automatically.
+                            </p>
+                          </div>
+                        </label>
+
+                        <label
+                          className={`${styles.radioOption} ${durationType === "FIXED" ? styles.radioOptionActive : ""}`}
+                        >
+                          <input
+                            type='radio'
+                            value='FIXED'
+                            className={styles.radioInput}
+                            {...register("durationType")}
+                          />
+                          <div className={styles.radioContent}>
+                            <p className={styles.radioTitle}>Set period</p>
+                            <p className={styles.radioDescription}>
+                              The circle runs for a specific timeframe — like 6
+                              weeks of post-surgery meals. It&apos;ll
+                              automatically close when the period ends.
+                            </p>
+                          </div>
+                        </label>
+                      </div>
+
+                      {durationType === "FIXED" && (
+                        <div className={styles.row}>
+                          <div className={styles.field}>
+                            <label className={styles.label} htmlFor='startDate'>
+                              Start date
+                            </label>
+                            <input
+                              id='startDate'
+                              type='date'
+                              min={todayIso}
+                              className={`${styles.input} ${errors.startDate ? styles.inputError : ""}`}
+                              {...register("startDate")}
+                            />
+                            {errors.startDate && (
+                              <span className={styles.fieldError}>
+                                {errors.startDate.message}
+                              </span>
+                            )}
+                          </div>
+                          <div className={styles.field}>
+                            <label className={styles.label} htmlFor='endDate'>
+                              End date
+                            </label>
+                            <input
+                              id='endDate'
+                              type='date'
+                              min={todayIso}
+                              className={`${styles.input} ${errors.endDate ? styles.inputError : ""}`}
+                              {...register("endDate")}
+                            />
+                            {errors.endDate && (
+                              <span className={styles.fieldError}>
+                                {errors.endDate.message}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Step 6: Confirm */}
+                  {currentStep === 5 && (
                     <div className={styles.fields}>
                       <div className={styles.checkboxField}>
                         <input

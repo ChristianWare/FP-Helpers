@@ -11,6 +11,7 @@ import { formatRotationInterval } from "@/lib/shifts/rotationInterval";
 import { formatShiftDate, formatShiftFullDate } from "@/lib/shifts/formatShift";
 import DeleteCircleButton from "@/components/circles/DeleteCircleButton";
 import Confetti from "@/components/shared/Confetti/Confetti";
+import { formatCircleDuration } from "@/lib/circles/formatDuration";
 
 const DAYS_OF_WEEK = [
   "Sunday",
@@ -22,16 +23,11 @@ const DAYS_OF_WEEK = [
   "Saturday",
 ];
 
-type ShiftSummary = {
-  id: string;
-  scheduledDate: string;
-  status: string;
-  completedAt?: string | null;
-};
-
 type RotationShift = {
   id: string;
   scheduledDate: string;
+  status: string;
+  completedAt: string | null;
   assignedUser: {
     id: string;
     firstName: string;
@@ -48,6 +44,9 @@ type Props = {
     rotationDayOfWeek: number;
     rotationCadence: string;
     typicalArrivalTime: string | null;
+    durationType: "INDEFINITE" | "FIXED";
+    startDate: string | null;
+    endDate: string | null;
   };
   recipient: {
     id: string;
@@ -68,13 +67,15 @@ type Props = {
       phone: string;
     };
   }[];
+  myNextShift: {
+    id: string;
+    scheduledDate: string;
+  } | null;
   currentUserId: string;
   currentUserRole: string | null;
   joinUrl: string | null;
   justCreated: boolean;
   nextShiftByHelper: Record<string, string>;
-  myUpcomingShifts: ShiftSummary[];
-  myRecentShifts: ShiftSummary[];
   rotationShifts: RotationShift[];
 };
 
@@ -87,9 +88,8 @@ export default function CirclePage({
   joinUrl,
   justCreated,
   nextShiftByHelper,
-  myUpcomingShifts,
-  myRecentShifts,
   rotationShifts,
+  myNextShift,
 }: Props) {
   const [copied, setCopied] = useState(false);
 
@@ -104,8 +104,6 @@ export default function CirclePage({
     helpersInRotation,
     circle.rotationCadence as "WEEKLY" | "BIWEEKLY" | "CUSTOM",
   );
-
-  const myNextShift = myUpcomingShifts[0] ?? null;
 
   const copyJoinLink = async () => {
     if (!joinUrl) return;
@@ -155,7 +153,7 @@ export default function CirclePage({
             </>
           )}
 
-          {/* Your next shift banner (purple hero) */}
+          {/* Your next shift banner + Schedule */}
           {myNextShift && (
             <section className={styles.helperList}>
               <div className={styles.myShiftBanner}>
@@ -175,8 +173,9 @@ export default function CirclePage({
                   Open shift details →
                 </Link>
               </div>
+
               {/* Schedule */}
-              <section className={styles.section}>
+              <div className={styles.section}>
                 <div className={styles.sectionHeader}>
                   <h2 className={styles.sectionTitle}>Schedule</h2>
                 </div>
@@ -206,147 +205,40 @@ export default function CirclePage({
                       <p className={styles.infoValue}>{circle.address}</p>
                     </div>
                   )}
+                  <div className={styles.infoRow}>
+                    <span className={styles.fieldLabel}>Duration</span>
+                    <p className={styles.infoValue}>
+                      {circle.durationType === "FIXED" && circle.endDate ? (
+                        <>
+                          {new Date(circle.endDate).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "long",
+                              day: "numeric",
+                              year: "numeric",
+                            },
+                          )}
+                          <span className={styles.durationRemaining}>
+                            {" "}
+                            ·{" "}
+                            {formatCircleDuration({
+                              durationType: circle.durationType,
+                              startDate: circle.startDate
+                                ? new Date(circle.startDate)
+                                : null,
+                              endDate: new Date(circle.endDate),
+                            })}
+                          </span>
+                        </>
+                      ) : (
+                        // "Ongoing"
+                        <span className={styles.durationRemaining}>
+                          Ongoing
+                        </span>
+                      )}
+                    </p>
+                  </div>
                 </div>
-              </section>
-            </section>
-          )}
-
-          {/* Your other upcoming + recent */}
-          {(myUpcomingShifts.length > 1 || myRecentShifts.length > 0) && (
-            <section className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>Your shifts</h2>
-              </div>
-
-              {myUpcomingShifts.length > 1 && (
-                <>
-                  <p className={styles.shiftsGroupLabel}>Also coming up</p>
-                  <div className={styles.shiftsList}>
-                    {myUpcomingShifts.slice(1).map((s) => (
-                      <Link
-                        key={s.id}
-                        href={`/circles/${circle.id}/shifts/${s.id}`}
-                        className={styles.shiftRow}
-                      >
-                        <div className={styles.shiftRowMain}>
-                          <span className={styles.shiftRowDate}>
-                            {formatShiftDate(new Date(s.scheduledDate))}
-                          </span>
-                          <span className={styles.shiftRowFullDate}>
-                            {formatShiftFullDate(new Date(s.scheduledDate))}
-                          </span>
-                        </div>
-                        <span className={styles.shiftRowArrow}>→</span>
-                      </Link>
-                    ))}
-                  </div>
-                </>
-              )}
-
-              {myRecentShifts.length > 0 && (
-                <>
-                  <p className={styles.shiftsGroupLabel}>Recently completed</p>
-                  <div className={styles.shiftsList}>
-                    {myRecentShifts.map((s) => (
-                      <Link
-                        key={s.id}
-                        href={`/circles/${circle.id}/shifts/${s.id}`}
-                        className={`${styles.shiftRow} ${styles.shiftRowCompleted}`}
-                      >
-                        <div className={styles.shiftRowMain}>
-                          <span className={styles.shiftRowDate}>
-                            {formatShiftFullDate(new Date(s.scheduledDate))}
-                          </span>
-                          <span className={styles.shiftRowStatus}>
-                            ✓ Complete
-                          </span>
-                        </div>
-                        <span className={styles.shiftRowArrow}>→</span>
-                      </Link>
-                    ))}
-                  </div>
-                </>
-              )}
-            </section>
-          )}
-
-          {/* Full rotation schedule */}
-          {rotationShifts.length > 0 && (
-            <section className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>The rotation</h2>
-                <span className={styles.itemCount}>
-                  Next {rotationShifts.length}{" "}
-                  {rotationShifts.length === 1 ? "shift" : "shifts"}
-                </span>
-              </div>
-
-              <p className={styles.listContext}>
-                {rotationIntervalLabel} per person · {helpersInRotation}{" "}
-                {helpersInRotation === 1 ? "helper" : "helpers"} in rotation
-              </p>
-
-              <div className={styles.rotationList}>
-                {rotationShifts.map((s) => {
-                  const isMine = s.assignedUser?.id === currentUserId;
-                  return (
-                    <div
-                      key={s.id}
-                      className={`${styles.rotationRow} ${isMine ? styles.rotationRowMine : ""}`}
-                    >
-                      <div className={styles.rotationDate}>
-                        <span className={styles.rotationDateMain}>
-                          {formatShiftDate(new Date(s.scheduledDate))}
-                        </span>
-                        <span className={styles.rotationDateFull}>
-                          {formatShiftFullDate(new Date(s.scheduledDate))}
-                        </span>
-                      </div>
-                      <div className={styles.rotationHelper}>
-                        {s.assignedUser ? (
-                          <>
-                            <span className={styles.rotationHelperName}>
-                              {s.assignedUser.firstName}{" "}
-                              {s.assignedUser.lastName}
-                            </span>
-                            {isMine && (
-                              <span className={styles.rotationMinePill}>
-                                You
-                              </span>
-                            )}
-                          </>
-                        ) : (
-                          <span className={styles.rotationUnassigned}>
-                            Not yet assigned
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
-          {/* Share link — admin only */}
-          {joinUrl && isAdmin && (
-            <section className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>Invite helpers</h2>
-              </div>
-              <p className={styles.listContext}>
-                Share this link in your group chat. Anyone who taps it can sign
-                up and join the rotation.
-              </p>
-              <div className={styles.shareBox}>
-                <code className={styles.shareUrl}>{joinUrl}</code>
-                <button
-                  type='button'
-                  className={styles.copyBtn}
-                  onClick={copyJoinLink}
-                >
-                  {copied ? "Copied!" : "Copy"}
-                </button>
               </div>
             </section>
           )}
@@ -377,6 +269,103 @@ export default function CirclePage({
                     {formatPhone(recipient.phone)}
                   </a>
                 </div>
+              </div>
+            </section>
+          )}
+
+          {/* The rotation — current cycle only, with completion state per row */}
+          {rotationShifts.length > 0 && (
+            <section className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>The rotation</h2>
+                <span className={styles.itemCount}>
+                  {helpersInRotation}{" "}
+                  {helpersInRotation === 1 ? "helper" : "helpers"} in rotation
+                </span>
+              </div>
+
+              <p className={styles.listContext}>
+                {rotationIntervalLabel} per person · {helpersInRotation}{" "}
+                {helpersInRotation === 1 ? "helper" : "helpers"} in rotation
+              </p>
+
+              <div className={styles.rotationList}>
+                {rotationShifts.map((s) => {
+                  const isMine = s.assignedUser?.id === currentUserId;
+                  const isComplete = s.status === "COMPLETED";
+
+                  const rowClass = [
+                    styles.rotationRow,
+                    isMine ? styles.rotationRowMine : "",
+                    isComplete ? styles.rotationRowCompleted : "",
+                    isComplete && isMine ? styles.rotationRowMineCompleted : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ");
+
+                  return (
+                    <Link
+                      key={s.id}
+                      href={`/circles/${circle.id}/shifts/${s.id}`}
+                      className={rowClass}
+                    >
+                      <div className={styles.rotationDate}>
+                        <span className={styles.rotationDateMain}>
+                          {formatShiftDate(new Date(s.scheduledDate))}
+                        </span>
+                        <span className={styles.rotationDateFull}>
+                          {formatShiftFullDate(new Date(s.scheduledDate))}
+                        </span>
+                      </div>
+                      <div className={styles.rotationHelper}>
+                        {s.assignedUser ? (
+                          <>
+                            <span className={styles.rotationHelperName}>
+                              {s.assignedUser.firstName}{" "}
+                              {s.assignedUser.lastName}
+                            </span>
+                            {isComplete ? (
+                              <span className={styles.completedBadge}>
+                                ✓ Complete
+                              </span>
+                            ) : isMine ? (
+                              <span className={styles.rotationMinePill}>
+                                You
+                              </span>
+                            ) : null}
+                          </>
+                        ) : (
+                          <span className={styles.rotationUnassigned}>
+                            Not yet assigned
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* Share link — admin only */}
+          {joinUrl && isAdmin && (
+            <section className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>Invite helpers</h2>
+              </div>
+              <p className={styles.listContext}>
+                Share this link in your group chat. Anyone who taps it can sign
+                up and join the rotation.
+              </p>
+              <div className={styles.shareBox}>
+                <code className={styles.shareUrl}>{joinUrl}</code>
+                <button
+                  type='button'
+                  className={styles.copyBtn}
+                  onClick={copyJoinLink}
+                >
+                  {copied ? "Copied!" : "Copy"}
+                </button>
               </div>
             </section>
           )}

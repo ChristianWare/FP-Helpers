@@ -1,11 +1,6 @@
 // lib/shifts/getShiftDetails.ts
 import { db } from "@/lib/db";
 
-/**
- * Loads everything the helper needs to see for a specific shift:
- * circle info (recipient, address, notes), the grocery list for this shift,
- * the recipient's active prescriptions (for reference), and the assigned helper.
- */
 export async function getShiftDetails(shiftId: string) {
   return db.shift.findUnique({
     where: { id: shiftId },
@@ -52,10 +47,39 @@ export async function getShiftDetails(shiftId: string) {
             select: { firstName: true, lastName: true },
           },
         },
-        orderBy: [
-          { status: "asc" }, // PENDING before PURCHASED
-          { createdAt: "asc" },
-        ],
+        orderBy: [{ status: "asc" }, { createdAt: "asc" }],
+      },
+      notifications: {
+        where: {
+          OR: [
+            { template: { startsWith: "shift_reminder_" } },
+            { template: { startsWith: "swap_request_" } },
+          ],
+        },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          template: true,
+          channel: true,
+          status: true,
+          sentAt: true,
+          createdAt: true,
+          error: true,
+        },
+      },
+      swapRequests: {
+        where: { status: "OPEN" },
+        include: {
+          requestedBy: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 1, // There should only ever be one open swap at a time
       },
     },
   });

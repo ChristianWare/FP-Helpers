@@ -37,11 +37,40 @@ export const CreateCircleSchema = z
     rotationCadence: z.enum(["WEEKLY", "BIWEEKLY"]),
     typicalArrivalTime: z.string().max(50).optional(),
 
+    // Duration
+    durationType: z.enum(["INDEFINITE", "FIXED"]),
+    startDate: z.string().optional(), // ISO date string from form
+    endDate: z.string().optional(),
+
     organizerInRotation: z.boolean(),
   })
   .refine((data) => data.recipientPassword === data.recipientConfirmPassword, {
     message: "Passwords don't match",
     path: ["recipientConfirmPassword"],
-  });
+  })
+  .refine(
+    (data) => {
+      if (data.durationType === "FIXED") {
+        return !!data.startDate && !!data.endDate;
+      }
+      return true;
+    },
+    {
+      message: "Please enter a start and end date",
+      path: ["endDate"],
+    },
+  )
+  .refine(
+    (data) => {
+      if (data.durationType === "FIXED" && data.startDate && data.endDate) {
+        return new Date(data.endDate) > new Date(data.startDate);
+      }
+      return true;
+    },
+    {
+      message: "End date must be after start date",
+      path: ["endDate"],
+    },
+  );
 
 export type CreateCircleSchemaType = z.infer<typeof CreateCircleSchema>;

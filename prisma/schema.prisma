@@ -29,6 +29,11 @@ enum CircleStatus {
   ARCHIVED
 }
 
+enum CircleDurationType {
+  INDEFINITE
+  FIXED
+}
+
 enum RotationCadence {
   WEEKLY
   BIWEEKLY
@@ -245,6 +250,14 @@ model CareCircle {
   lookaheadWeeks     Int             @default(8)
   typicalArrivalTime String? // "around 10am"
 
+  // Duration — how long this circle is meant to run
+  durationType CircleDurationType @default(INDEFINITE)
+  startDate    DateTime?
+  endDate      DateTime?
+
+  // Whether the completion email has been sent (prevents double-send on cron)
+  completionEmailSentAt DateTime?
+
   // Reminder defaults
   reminderDaysBefore Int[] @default([7, 2, 1])
 
@@ -264,6 +277,7 @@ model CareCircle {
 
   @@index([status])
   @@index([recipientId])
+  @@index([endDate])
 }
 
 // =========================

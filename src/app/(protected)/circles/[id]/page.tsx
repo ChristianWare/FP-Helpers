@@ -67,61 +67,34 @@ export default async function Page({
     ? `${baseUrl}/join/${circle.joinLinks[0].token}`
     : null;
 
-  // Find the next upcoming shift for each helper
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const upcomingShifts = await db.shift.findMany({
+  // How many helpers are in rotation — defines "one rotation's worth" of slots
+  const helpersInRotationCount = await db.circleMembership.count({
     where: {
       circleId: circle.id,
-      scheduledDate: { gte: today },
-      status: { in: ["SCHEDULED", "IN_PROGRESS"] },
-      assignedUserId: { not: null },
-    },
-    orderBy: { scheduledDate: "asc" },
-    select: {
-      assignedUserId: true,
-      scheduledDate: true,
+      active: true,
+      inRotation: true,
+      role: { in: ["ADMIN", "HELPER"] },
     },
   });
 
-  // Build a map of userId → earliest upcoming shift date
-  const nextShiftByHelper: Record<string, string> = {};
-  for (const shift of upcomingShifts) {
-    if (shift.assignedUserId && !nextShiftByHelper[shift.assignedUserId]) {
-      nextShiftByHelper[shift.assignedUserId] =
-        shift.scheduledDate.toISOString();
-    }
-  }
+  const slotCount = Math.max(helpersInRotationCount, 1);
 
-  // Fetch the current user's upcoming + recent shifts for this circle
-  const myUpcomingShifts = await db.shift.findMany({
+  // "The rotation" view shows:
+  //   - The N most recent completed shifts (1 rotation's worth of recent history)
+  //   - The next N upcoming shifts (1 rotation's worth of what's coming)
+  //
+  // When a shift completes, it joins "recent completed" and pushes the
+  // oldest completed off the list. This keeps the view anchored to
+  // "what just happened + what's next."
+
+  const upcomingInRotation = await db.shift.findMany({
     where: {
-      circleId: circleId,
-      assignedUserId: session.user.id,
-      scheduledDate: { gte: today },
+      circleId: circle.id,
       status: { in: ["SCHEDULED", "IN_PROGRESS"] },
-    },
-    orderBy: { scheduledDate: "asc" },
-    take: 5,
-  });
-
-  const myRecentShifts = await db.shift.findMany({
-    where: {
-      circleId: circleId,
-      assignedUserId: session.user.id,
-      status: "COMPLETED",
-    },
-    orderBy: { scheduledDate: "desc" },
-    take: 3,
-  });
-
-  // Fetch the full upcoming rotation (all helpers, next ~8 shifts)
-  const rotationShifts = await db.shift.findMany({
-    where: {
-      circleId: circleId,
       scheduledDate: { gte: today },
-      status: { in: ["SCHEDULED", "IN_PROGRESS"] },
     },
     include: {
       assignedUser: {
@@ -129,7 +102,54 @@ export default async function Page({
       },
     },
     orderBy: { scheduledDate: "asc" },
-    take: 8,
+    take: slotCount,
+  });
+
+  const recentCompleted = await db.shift.findMany({
+    where: {
+      circleId: circle.id,
+      status: "COMPLETED",
+    },
+    include: {
+      assignedUser: {
+        select: { id: true, firstName: true, lastName: true },
+      },
+    },
+    orderBy: { scheduledDate: "desc" },
+    take: slotCount,
+  });
+
+  // Combine: completed (oldest first, chronological) + upcoming (chronological)
+  const rotationShifts = [
+    ...[...recentCompleted].reverse(),
+    ...upcomingInRotation,
+  ];
+
+  // Build map of userId → earliest upcoming shift date (for helper cards)
+  const nextShiftByHelper: Record<string, string> = {};
+  for (const shift of upcomingInRotation) {
+    if (shift.assignedUserId && !nextShiftByHelper[shift.assignedUserId]) {
+      nextShiftByHelper[shift.assignedUserId] =
+        shift.scheduledDate.toISOString();
+    }
+  }
+
+  // The current user's next upcoming shift in THIS circle — regardless
+  // of whether it falls inside the rotation window we're displaying above.
+  // If Christian's shifts in the current rotation are all completed or
+  // swapped away, this still finds his next one further out.
+  const myNextShift = await db.shift.findFirst({
+    where: {
+      circleId: circle.id,
+      assignedUserId: session.user.id,
+      status: { in: ["SCHEDULED", "IN_PROGRESS"] },
+      scheduledDate: { gte: today },
+    },
+    orderBy: { scheduledDate: "asc" },
+    select: {
+      id: true,
+      scheduledDate: true,
+    },
   });
 
   return (
@@ -142,6 +162,9 @@ export default async function Page({
         rotationDayOfWeek: circle.rotationDayOfWeek,
         rotationCadence: circle.rotationCadence,
         typicalArrivalTime: circle.typicalArrivalTime,
+        durationType: circle.durationType,
+        startDate: circle.startDate?.toISOString() ?? null,
+        endDate: circle.endDate?.toISOString() ?? null,
       }}
       recipient={circle.recipient}
       memberships={circle.memberships.map((m) => ({
@@ -155,20 +178,11 @@ export default async function Page({
       joinUrl={joinUrl}
       justCreated={justCreated}
       nextShiftByHelper={nextShiftByHelper}
-      myUpcomingShifts={myUpcomingShifts.map((s) => ({
-        id: s.id,
-        scheduledDate: s.scheduledDate.toISOString(),
-        status: s.status,
-      }))}
-      myRecentShifts={myRecentShifts.map((s) => ({
+      rotationShifts={rotationShifts.map((s) => ({
         id: s.id,
         scheduledDate: s.scheduledDate.toISOString(),
         status: s.status,
         completedAt: s.completedAt?.toISOString() ?? null,
-      }))}
-      rotationShifts={rotationShifts.map((s) => ({
-        id: s.id,
-        scheduledDate: s.scheduledDate.toISOString(),
         assignedUser: s.assignedUser
           ? {
               id: s.assignedUser.id,
@@ -177,6 +191,14 @@ export default async function Page({
             }
           : null,
       }))}
+      myNextShift={
+        myNextShift
+          ? {
+              id: myNextShift.id,
+              scheduledDate: myNextShift.scheduledDate.toISOString(),
+            }
+          : null
+      }
     />
   );
 }

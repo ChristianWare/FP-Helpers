@@ -21,13 +21,11 @@ import { revalidatePath } from "next/cache";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const createCircle = async (values: CreateCircleSchemaType) => {
-  // 1. Ensure caller is authenticated
   const session = await auth();
   if (!session?.user?.id) {
     return { error: "You must be signed in to create a circle" };
   }
 
-  // 2. Validate input
   const validated = CreateCircleSchema.safeParse(values);
   if (!validated.success) {
     return {
@@ -47,13 +45,15 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
     rotationDayOfWeek,
     rotationCadence,
     typicalArrivalTime,
+    durationType,
+    startDate,
+    endDate,
     organizerInRotation,
   } = validated.data;
 
   const normalizedRecipientEmail = recipientEmail.toLowerCase().trim();
   const normalizedRecipientPhone = recipientPhone.replace(/\D/g, "");
 
-  // 3. Don't let the organizer set themselves as the recipient
   if (normalizedRecipientEmail === session.user.email?.toLowerCase()) {
     return {
       error:
@@ -61,24 +61,26 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
     };
   }
 
-  // 4. Check if the recipient email already belongs to someone
   const existingRecipient = await getUserByEmail(normalizedRecipientEmail);
-
-  // 5. Generate the shareable join link token
   const joinToken = generateToken();
 
-  // 6. Do all the database writes in a single transaction
+  // Parse dates into Date objects (day-bounded)
+  const parsedStartDate =
+    durationType === "FIXED" && startDate ? new Date(startDate) : null;
+  const parsedEndDate =
+    durationType === "FIXED" && endDate ? new Date(endDate) : null;
+  if (parsedStartDate) parsedStartDate.setHours(0, 0, 0, 0);
+  if (parsedEndDate) parsedEndDate.setHours(23, 59, 59, 999);
+
   let circleId: string;
 
   try {
     const result = await db.$transaction(async (tx) => {
-      // Create or reuse recipient user
       let recipient;
       if (existingRecipient) {
         recipient = existingRecipient;
       } else {
         const hashedPassword = await bcryptjs.hash(recipientPassword, 10);
-
         recipient = await tx.user.create({
           data: {
             firstName: recipientFirstName.trim(),
@@ -91,7 +93,6 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
         });
       }
 
-      // Create the circle
       const circle = await tx.careCircle.create({
         data: {
           name: circleName.trim(),
@@ -101,10 +102,12 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
           rotationDayOfWeek,
           rotationCadence,
           typicalArrivalTime: typicalArrivalTime?.trim() || null,
+          durationType,
+          startDate: parsedStartDate,
+          endDate: parsedEndDate,
         },
       });
 
-      // Add recipient as RECIPIENT membership (not in rotation, sentinel order)
       await tx.circleMembership.create({
         data: {
           userId: recipient.id,
@@ -115,7 +118,6 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
         },
       });
 
-      // Add organizer as ADMIN membership — first in rotation if opted in
       await tx.circleMembership.create({
         data: {
           userId: session.user.id!,
@@ -126,7 +128,6 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
         },
       });
 
-      // Create the shareable join link
       await tx.circleJoinLink.create({
         data: {
           circleId: circle.id,
@@ -148,21 +149,16 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
     };
   }
 
-  // 7. Generate the first 8 weeks of shifts now that memberships exist,
-  //    then rebalance so everyone in rotation is slotted in correctly.
   try {
     await ensureShiftsForCircle(circleId);
     await rebalanceShiftsForCircle(circleId);
   } catch (err) {
     console.error("[createCircle] Failed to generate initial shifts:", err);
-    // Don't fail circle creation if shift generation has an issue
   }
 
-  // 8. Send welcome email with login credentials (only for new users)
   if (!existingRecipient) {
     try {
       const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/login`;
-
       const { subject, html, text } = buildCircleWelcomeEmail({
         recipientFirstName: recipientFirstName.trim(),
         recipientEmail: normalizedRecipientEmail,
@@ -189,13 +185,9 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
     }
   }
 
-  // 9. Invalidate cached pages so they pick up the new circle
   revalidatePath("/dashboard");
   revalidatePath(`/circles/${circleId}`);
   revalidatePath("/admin");
 
-  return {
-    success: true,
-    circleId,
-  };
+  return { success: true, circleId };
 };

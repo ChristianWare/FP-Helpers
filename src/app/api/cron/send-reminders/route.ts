@@ -2,115 +2,82 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sendShiftReminder } from "@/lib/notifications/sendShiftReminder";
+import { ensureShiftsForCircle } from "@/lib/shifts/generateShifts";
+import { archiveExpiredCircles } from "@/lib/circles/archiveExpiredCircles";
 
-// Vercel Cron invokes this with an Authorization header = "Bearer <CRON_SECRET>"
-// For manual testing, you can hit it with the same header locally via curl.
-
-type DaysBefore = 7 | 2 | 1;
-
-export async function GET(req: NextRequest) {
-  // 1. Authenticate the request
-  const authHeader = req.headers.get("authorization");
-  const expectedAuth = `Bearer ${process.env.CRON_SECRET}`;
-
-  if (!process.env.CRON_SECRET) {
-    return NextResponse.json(
-      { error: "CRON_SECRET is not configured" },
-      { status: 500 },
-    );
-  }
-
-  if (authHeader !== expectedAuth) {
+export async function GET(request: NextRequest) {
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // 2. Fetch all active circles with their reminder configuration
+  // First: archive expired FIXED-duration circles + send completion emails
+  const archiveResult = await archiveExpiredCircles();
+
   const circles = await db.careCircle.findMany({
     where: { status: "ACTIVE" },
     select: {
       id: true,
-      name: true,
       reminderDaysBefore: true,
     },
   });
 
-  const summary = {
-    circlesProcessed: circles.length,
-    shiftsEvaluated: 0,
-    sent: 0,
-    skipped: 0,
-    failed: 0,
-    details: [] as Array<{
-      circleId: string;
-      circleName: string;
-      shiftId: string;
-      daysBefore: number;
-      result: string;
-    }>,
-  };
+  let shiftsEvaluated = 0;
+  let sent = 0;
+  let skipped = 0;
+  let failed = 0;
 
-  // 3. For each circle, check each reminder window
   for (const circle of circles) {
-    const windows = (circle.reminderDaysBefore ?? [7, 2, 1]).filter(
-      (n): n is DaysBefore => n === 7 || n === 2 || n === 1,
+    // Keep shift windows healthy for every active circle
+    try {
+      await ensureShiftsForCircle(circle.id, 16);
+    } catch (err) {
+      console.error(
+        `[cron] ensureShiftsForCircle failed for ${circle.id}:`,
+        err,
+      );
+    }
+
+    const reminderDays = circle.reminderDaysBefore.filter(
+      (d) => d === 7 || d === 2 || d === 1,
     );
 
-    for (const daysBefore of windows) {
-      // Compute the target date range: exactly N days from today, 00:00 → 23:59
+    for (const daysBefore of reminderDays) {
       const targetStart = new Date();
-      targetStart.setHours(0, 0, 0, 0);
       targetStart.setDate(targetStart.getDate() + daysBefore);
+      targetStart.setHours(0, 0, 0, 0);
 
       const targetEnd = new Date(targetStart);
       targetEnd.setHours(23, 59, 59, 999);
 
-      // Find shifts in this circle happening exactly N days from now
       const shifts = await db.shift.findMany({
         where: {
           circleId: circle.id,
           scheduledDate: { gte: targetStart, lte: targetEnd },
           status: { in: ["SCHEDULED", "IN_PROGRESS"] },
-          assignedUserId: { not: null },
         },
         select: { id: true },
       });
 
-      summary.shiftsEvaluated += shifts.length;
-
-      // Send a reminder for each matching shift
       for (const shift of shifts) {
+        shiftsEvaluated++;
         const result = await sendShiftReminder({
           shiftId: shift.id,
-          daysBefore,
+          daysBefore: daysBefore as 7 | 2 | 1,
         });
-
-        if (result.status === "sent") summary.sent++;
-        else if (result.status === "skipped") summary.skipped++;
-        else summary.failed++;
-
-        summary.details.push({
-          circleId: circle.id,
-          circleName: circle.name,
-          shiftId: shift.id,
-          daysBefore,
-          result:
-            result.status === "sent"
-              ? "sent"
-              : result.status === "skipped"
-                ? `skipped: ${result.reason}`
-                : `failed: ${result.error}`,
-        });
+        if (result.status === "sent") sent++;
+        else if (result.status === "skipped") skipped++;
+        else failed++;
       }
     }
   }
 
-  console.log("[cron/send-reminders] Summary:", {
-    circlesProcessed: summary.circlesProcessed,
-    shiftsEvaluated: summary.shiftsEvaluated,
-    sent: summary.sent,
-    skipped: summary.skipped,
-    failed: summary.failed,
+  return NextResponse.json({
+    circlesProcessed: circles.length,
+    shiftsEvaluated,
+    sent,
+    skipped,
+    failed,
+    archive: archiveResult,
   });
-
-  return NextResponse.json(summary);
 }
