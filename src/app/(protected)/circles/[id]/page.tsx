@@ -70,7 +70,6 @@ export default async function Page({
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // How many helpers are in rotation — defines "one rotation's worth" of slots
   const helpersInRotationCount = await db.circleMembership.count({
     where: {
       circleId: circle.id,
@@ -81,14 +80,6 @@ export default async function Page({
   });
 
   const slotCount = Math.max(helpersInRotationCount, 1);
-
-  // "The rotation" view shows:
-  //   - The N most recent completed shifts (1 rotation's worth of recent history)
-  //   - The next N upcoming shifts (1 rotation's worth of what's coming)
-  //
-  // When a shift completes, it joins "recent completed" and pushes the
-  // oldest completed off the list. This keeps the view anchored to
-  // "what just happened + what's next."
 
   const upcomingInRotation = await db.shift.findMany({
     where: {
@@ -119,13 +110,11 @@ export default async function Page({
     take: slotCount,
   });
 
-  // Combine: completed (oldest first, chronological) + upcoming (chronological)
   const rotationShifts = [
     ...[...recentCompleted].reverse(),
     ...upcomingInRotation,
   ];
 
-  // Build map of userId → earliest upcoming shift date (for helper cards)
   const nextShiftByHelper: Record<string, string> = {};
   for (const shift of upcomingInRotation) {
     if (shift.assignedUserId && !nextShiftByHelper[shift.assignedUserId]) {
@@ -134,10 +123,6 @@ export default async function Page({
     }
   }
 
-  // The current user's next upcoming shift in THIS circle — regardless
-  // of whether it falls inside the rotation window we're displaying above.
-  // If Christian's shifts in the current rotation are all completed or
-  // swapped away, this still finds his next one further out.
   const myNextShift = await db.shift.findFirst({
     where: {
       circleId: circle.id,
@@ -159,6 +144,10 @@ export default async function Page({
         name: circle.name,
         status: circle.status,
         address: circle.address,
+        addressCity: circle.addressCity,
+        addressState: circle.addressState,
+        addressZip: circle.addressZip,
+        accessNotes: circle.accessNotes,
         rotationDayOfWeek: circle.rotationDayOfWeek,
         rotationCadence: circle.rotationCadence,
         typicalArrivalTime: circle.typicalArrivalTime,

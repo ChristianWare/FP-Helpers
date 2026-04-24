@@ -12,6 +12,7 @@ import {
   CreateCircleSchemaType,
 } from "@/schemas/CreateCircleSchema";
 import { createCircle } from "@/actions/circles/createCircle";
+import { US_STATES } from "@/lib/states";
 import styles from "./CreateCirclePage.module.css";
 import LayoutWrapper from "@/components/shared/LayoutWrapper";
 import toast from "react-hot-toast";
@@ -24,6 +25,10 @@ function formatPhoneNumber(value: string): string {
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
 }
 
+function formatZip(value: string): string {
+  return value.replace(/\D/g, "").slice(0, 5);
+}
+
 const DAYS_OF_WEEK = [
   { value: 0, label: "Sunday" },
   { value: 1, label: "Monday" },
@@ -34,7 +39,6 @@ const DAYS_OF_WEEK = [
   { value: 6, label: "Saturday" },
 ];
 
-// Arrival time options — 7am through 9pm in 30-min increments
 const ARRIVAL_TIMES = (() => {
   const times: { value: string; label: string }[] = [];
   for (let hour = 7; hour <= 21; hour++) {
@@ -100,7 +104,7 @@ const STEP_FIELDS: Record<number, (keyof CreateCircleSchemaType)[]> = {
     "recipientPassword",
     "recipientConfirmPassword",
   ],
-  2: [],
+  2: ["address", "addressCity", "addressState", "addressZip"],
   3: ["rotationDayOfWeek", "rotationCadence"],
   4: ["durationType", "startDate", "endDate"],
   5: ["organizerInRotation"],
@@ -197,7 +201,6 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === STEPS.length - 1;
 
-  // Today's date for min attribute on date inputs
   const todayIso = new Date().toISOString().split("T")[0];
 
   return (
@@ -420,18 +423,18 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
                     </div>
                   )}
 
-                  {/* Step 3: Location */}
+                  {/* Step 3: Location (NEW — split address) */}
                   {currentStep === 2 && (
                     <div className={styles.fields}>
                       <div className={styles.field}>
                         <label className={styles.label} htmlFor='address'>
-                          Address
+                          Street address
                         </label>
                         <input
                           id='address'
                           type='text'
                           className={`${styles.input} ${errors.address ? styles.inputError : ""}`}
-                          placeholder='123 Friendship Park Dr, Phoenix, AZ'
+                          placeholder='123 Friendship Park Dr'
                           autoFocus
                           {...register("address")}
                         />
@@ -440,6 +443,76 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
                             {errors.address.message}
                           </span>
                         )}
+                      </div>
+
+                      <div className={styles.rowThree}>
+                        <div className={styles.field}>
+                          <label className={styles.label} htmlFor='addressCity'>
+                            City
+                          </label>
+                          <input
+                            id='addressCity'
+                            type='text'
+                            className={`${styles.input} ${errors.addressCity ? styles.inputError : ""}`}
+                            placeholder='Phoenix'
+                            {...register("addressCity")}
+                          />
+                          {errors.addressCity && (
+                            <span className={styles.fieldError}>
+                              {errors.addressCity.message}
+                            </span>
+                          )}
+                        </div>
+                        <div className={styles.field}>
+                          <label
+                            className={styles.label}
+                            htmlFor='addressState'
+                          >
+                            State
+                          </label>
+                          <select
+                            id='addressState'
+                            className={`${styles.input} ${errors.addressState ? styles.inputError : ""}`}
+                            {...register("addressState")}
+                          >
+                            <option value=''>—</option>
+                            {US_STATES.map((s) => (
+                              <option key={s.value} value={s.value}>
+                                {s.value}
+                              </option>
+                            ))}
+                          </select>
+                          {errors.addressState && (
+                            <span className={styles.fieldError}>
+                              {errors.addressState.message}
+                            </span>
+                          )}
+                        </div>
+                        <div className={styles.field}>
+                          <label className={styles.label} htmlFor='addressZip'>
+                            ZIP
+                          </label>
+                          <input
+                            id='addressZip'
+                            type='text'
+                            inputMode='numeric'
+                            className={`${styles.input} ${errors.addressZip ? styles.inputError : ""}`}
+                            placeholder='85001'
+                            {...register("addressZip", {
+                              onChange: (e) => {
+                                const formatted = formatZip(e.target.value);
+                                setValue("addressZip", formatted, {
+                                  shouldValidate: false,
+                                });
+                              },
+                            })}
+                          />
+                          {errors.addressZip && (
+                            <span className={styles.fieldError}>
+                              {errors.addressZip.message}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       <div className={styles.field}>

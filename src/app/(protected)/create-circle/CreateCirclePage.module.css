@@ -375,3 +375,15 @@
   margin: 0;
   line-height: 1.5;
 }
+
+.rowCsz {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 480px) {
+  .rowCsz {
+    grid-template-columns: 1fr;
+  }
+}

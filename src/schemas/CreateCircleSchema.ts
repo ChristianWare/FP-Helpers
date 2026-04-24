@@ -1,46 +1,69 @@
 // schemas/CreateCircleSchema.ts
 import { z } from "zod";
-
-const phoneRegex = /^[+]?[\d\s()-]{10,20}$/;
+import { US_STATE_VALUES } from "@/lib/states";
 
 export const CreateCircleSchema = z
   .object({
     circleName: z
       .string()
-      .min(1, { message: "Please give the circle a name" })
-      .max(80, { message: "Circle name is too long" }),
+      .trim()
+      .min(1, "Please give the circle a name")
+      .max(80, "That name is a bit long"),
 
+    // Recipient
     recipientFirstName: z
       .string()
-      .min(1, { message: "Recipient's first name is required" })
+      .trim()
+      .min(1, "First name is required")
       .max(50),
     recipientLastName: z
       .string()
-      .min(1, { message: "Recipient's last name is required" })
+      .trim()
+      .min(1, "Last name is required")
       .max(50),
-    recipientEmail: z
-      .string()
-      .email({ message: "Please enter a valid email for the recipient" }),
+    recipientEmail: z.string().trim().email("Please enter a valid email"),
     recipientPhone: z
       .string()
-      .min(10, { message: "Please enter a valid phone number" })
-      .regex(phoneRegex, { message: "Please enter a valid phone number" }),
+      .trim()
+      .regex(
+        /^(\(\d{3}\) \d{3}-\d{4}|\d{10})$/,
+        "Please enter a valid 10-digit phone number",
+      ),
     recipientPassword: z
       .string()
-      .min(8, { message: "Password must be at least 8 characters" }),
+      .min(8, "Password must be at least 8 characters"),
     recipientConfirmPassword: z.string(),
 
-    address: z.string().max(300).optional(),
-    accessNotes: z.string().max(500).optional(),
+    // Address (all optional)
+    address: z.string().trim().max(200).optional().or(z.literal("")),
+    addressCity: z.string().trim().max(80).optional().or(z.literal("")),
+    addressState: z
+      .string()
+      .trim()
+      .optional()
+      .refine(
+        (v) => !v || v === "" || US_STATE_VALUES.includes(v as never),
+        "Please pick a valid state",
+      ),
+    addressZip: z
+      .string()
+      .trim()
+      .optional()
+      .refine(
+        (v) => !v || v === "" || /^\d{5}(-\d{4})?$/.test(v),
+        "Please enter a 5-digit ZIP",
+      ),
+    accessNotes: z.string().trim().max(500).optional().or(z.literal("")),
 
-    rotationDayOfWeek: z.number().min(0).max(6),
+    // Schedule
+    rotationDayOfWeek: z.number().int().min(0).max(6),
     rotationCadence: z.enum(["WEEKLY", "BIWEEKLY"]),
-    typicalArrivalTime: z.string().max(50).optional(),
+    typicalArrivalTime: z.string().optional().or(z.literal("")),
 
     // Duration
     durationType: z.enum(["INDEFINITE", "FIXED"]),
-    startDate: z.string().optional(), // ISO date string from form
-    endDate: z.string().optional(),
+    startDate: z.string().optional().or(z.literal("")),
+    endDate: z.string().optional().or(z.literal("")),
 
     organizerInRotation: z.boolean(),
   })
@@ -49,24 +72,9 @@ export const CreateCircleSchema = z
     path: ["recipientConfirmPassword"],
   })
   .refine(
-    (data) => {
-      if (data.durationType === "FIXED") {
-        return !!data.startDate && !!data.endDate;
-      }
-      return true;
-    },
-    {
-      message: "Please enter a start and end date",
-      path: ["endDate"],
-    },
-  )
-  .refine(
-    (data) => {
-      if (data.durationType === "FIXED" && data.startDate && data.endDate) {
-        return new Date(data.endDate) > new Date(data.startDate);
-      }
-      return true;
-    },
+    (data) =>
+      data.durationType === "INDEFINITE" ||
+      (data.startDate && data.endDate && data.endDate > data.startDate),
     {
       message: "End date must be after start date",
       path: ["endDate"],

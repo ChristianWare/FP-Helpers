@@ -24,3 +24,37 @@ export function fullName(user: {
 }): string {
   return `${user.firstName} ${user.lastName}`.trim();
 }
+
+// lib/format.ts (append)
+
+/**
+ * Formats "City, STATE ZIP" from individual parts.
+ * Gracefully handles missing pieces.
+ * e.g. formatCityStateZip("Phoenix", "AZ", "85001") → "Phoenix, AZ 85001"
+ */
+export function formatCityStateZip(
+  city: string | null | undefined,
+  state: string | null | undefined,
+  zip: string | null | undefined,
+): string {
+  const cityPart = city?.trim() ?? "";
+  const stateZip = [state?.trim(), zip?.trim()].filter(Boolean).join(" ");
+
+  if (!cityPart && !stateZip) return "";
+  if (cityPart && stateZip) return `${cityPart}, ${stateZip}`;
+  return cityPart || stateZip;
+}
+
+const DAYS_OF_WEEK_LONG = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+export function dayOfWeekLabel(day: number): string {
+  return DAYS_OF_WEEK_LONG[day] ?? "";
+}

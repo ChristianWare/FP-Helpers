@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // app/(protected)/circles/[id]/CirclePage.tsx
 "use client";
 
@@ -12,6 +13,9 @@ import { formatShiftDate, formatShiftFullDate } from "@/lib/shifts/formatShift";
 import DeleteCircleButton from "@/components/circles/DeleteCircleButton";
 import Confetti from "@/components/shared/Confetti/Confetti";
 import { formatCircleDuration } from "@/lib/circles/formatDuration";
+import RecipientSection from "./RecipientSection";
+import ScheduleSection from "./ScheduleSection";
+// 
 
 const DAYS_OF_WEEK = [
   "Sunday",
@@ -41,10 +45,14 @@ type Props = {
     name: string;
     status: string;
     address: string | null;
+    addressCity: string | null; 
+    addressState: string | null; 
+    addressZip: string | null; 
+    accessNotes: string | null; 
     rotationDayOfWeek: number;
     rotationCadence: string;
     typicalArrivalTime: string | null;
-    durationType: "INDEFINITE" | "FIXED";
+    durationType: string;
     startDate: string | null;
     endDate: string | null;
   };
@@ -175,102 +183,33 @@ export default function CirclePage({
               </div>
 
               {/* Schedule */}
-              <div className={styles.section}>
-                <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>Schedule</h2>
-                </div>
-                <div className={styles.infoCard}>
-                  <div className={styles.infoRow}>
-                    <span className={styles.fieldLabel}>Day</span>
-                    <p className={styles.infoValue}>
-                      {DAYS_OF_WEEK[circle.rotationDayOfWeek]}
-                      {circle.rotationCadence === "BIWEEKLY"
-                        ? " (every other week)"
-                        : ""}
-                    </p>
-                  </div>
-
-                  {circle.typicalArrivalTime && (
-                    <div className={styles.infoRow}>
-                      <span className={styles.fieldLabel}>Arrival time</span>
-                      <p className={styles.infoValue}>
-                        {circle.typicalArrivalTime}
-                      </p>
-                    </div>
-                  )}
-
-                  {circle.address && (
-                    <div className={styles.infoRow}>
-                      <span className={styles.fieldLabel}>Address</span>
-                      <p className={styles.infoValue}>{circle.address}</p>
-                    </div>
-                  )}
-                  <div className={styles.infoRow}>
-                    <span className={styles.fieldLabel}>Duration</span>
-                    <p className={styles.infoValue}>
-                      {circle.durationType === "FIXED" && circle.endDate ? (
-                        <>
-                          {new Date(circle.endDate).toLocaleDateString(
-                            "en-US",
-                            {
-                              month: "long",
-                              day: "numeric",
-                              year: "numeric",
-                            },
-                          )}
-                          <span className={styles.durationRemaining}>
-                            {" "}
-                            ·{" "}
-                            {formatCircleDuration({
-                              durationType: circle.durationType,
-                              startDate: circle.startDate
-                                ? new Date(circle.startDate)
-                                : null,
-                              endDate: new Date(circle.endDate),
-                            })}
-                          </span>
-                        </>
-                      ) : (
-                        // "Ongoing"
-                        <span className={styles.durationRemaining}>
-                          Ongoing
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <ScheduleSection
+                circleId={circle.id}
+                schedule={{
+                  rotationDayOfWeek: circle.rotationDayOfWeek,
+                  rotationCadence: circle.rotationCadence,
+                  typicalArrivalTime: circle.typicalArrivalTime,
+                  address: circle.address,
+                  addressCity: circle.addressCity,
+                  addressState: circle.addressState,
+                  addressZip: circle.addressZip,
+                  accessNotes: circle.accessNotes,
+                  durationType: circle.durationType,
+                  startDate: circle.startDate,
+                  endDate: circle.endDate,
+                }}
+                isAdmin={isAdmin}
+              />
             </section>
           )}
 
           {/* Recipient */}
           {recipient && (
-            <section className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>Recipient</h2>
-              </div>
-              <div className={styles.infoCard}>
-                <div className={styles.infoRow}>
-                  <span className={styles.fieldLabel}>Name</span>
-                  <p className={styles.infoValue}>
-                    {recipient.firstName} {recipient.lastName}
-                  </p>
-                </div>
-                <div className={styles.infoRow}>
-                  <span className={styles.fieldLabel}>Email</span>
-                  <p className={styles.infoValue}>{recipient.email}</p>
-                </div>
-                <div className={styles.infoRow}>
-                  <span className={styles.fieldLabel}>Phone number</span>
-                  <a
-                    href={`tel:${recipient.phone}`}
-                    className={styles.infoValueLink}
-                  >
-                    {formatPhone(recipient.phone)}
-                  </a>
-                </div>
-              </div>
-            </section>
+            <RecipientSection
+              circleId={circle.id}
+              recipient={recipient}
+              isAdmin={isAdmin}
+            />
           )}
 
           {/* The rotation — current cycle only, with completion state per row */}

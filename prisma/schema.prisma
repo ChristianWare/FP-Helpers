@@ -239,6 +239,9 @@ model CareCircle {
 
   // Contact / location info
   address          String?
+  addressCity      String?
+  addressState     String?
+  addressZip       String?
   accessNotes      String? @db.Text // "spare key under mat", "ring doorbell twice"
   emergencyContact String?
   emergencyPhone   String?

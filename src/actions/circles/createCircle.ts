@@ -41,6 +41,9 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
     recipientPhone,
     recipientPassword,
     address,
+    addressCity,
+    addressState,
+    addressZip,
     accessNotes,
     rotationDayOfWeek,
     rotationCadence,
@@ -64,14 +67,6 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
   const existingRecipient = await getUserByEmail(normalizedRecipientEmail);
   const joinToken = generateToken();
 
-  // Parse dates into Date objects (day-bounded)
-  const parsedStartDate =
-    durationType === "FIXED" && startDate ? new Date(startDate) : null;
-  const parsedEndDate =
-    durationType === "FIXED" && endDate ? new Date(endDate) : null;
-  if (parsedStartDate) parsedStartDate.setHours(0, 0, 0, 0);
-  if (parsedEndDate) parsedEndDate.setHours(23, 59, 59, 999);
-
   let circleId: string;
 
   try {
@@ -81,6 +76,7 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
         recipient = existingRecipient;
       } else {
         const hashedPassword = await bcryptjs.hash(recipientPassword, 10);
+
         recipient = await tx.user.create({
           data: {
             firstName: recipientFirstName.trim(),
@@ -98,13 +94,18 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
           name: circleName.trim(),
           recipientId: recipient.id,
           address: address?.trim() || null,
+          addressCity: addressCity?.trim() || null,
+          addressState: addressState?.trim() || null,
+          addressZip: addressZip?.trim() || null,
           accessNotes: accessNotes?.trim() || null,
           rotationDayOfWeek,
           rotationCadence,
           typicalArrivalTime: typicalArrivalTime?.trim() || null,
           durationType,
-          startDate: parsedStartDate,
-          endDate: parsedEndDate,
+          startDate:
+            durationType === "FIXED" && startDate ? new Date(startDate) : null,
+          endDate:
+            durationType === "FIXED" && endDate ? new Date(endDate) : null,
         },
       });
 
@@ -159,6 +160,7 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
   if (!existingRecipient) {
     try {
       const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/login`;
+
       const { subject, html, text } = buildCircleWelcomeEmail({
         recipientFirstName: recipientFirstName.trim(),
         recipientEmail: normalizedRecipientEmail,
@@ -189,5 +191,8 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
   revalidatePath(`/circles/${circleId}`);
   revalidatePath("/admin");
 
-  return { success: true, circleId };
+  return {
+    success: true,
+    circleId,
+  };
 };
