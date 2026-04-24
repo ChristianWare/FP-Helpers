@@ -95,3 +95,9 @@
 .loginLink:hover {
   text-decoration: underline;
 }
+
+@media screen and (max-width: 568px) {
+  .card {
+    margin-top: 5rem;
+  }
+}
