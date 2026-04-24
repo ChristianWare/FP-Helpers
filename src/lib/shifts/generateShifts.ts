@@ -3,10 +3,16 @@ import { db } from "@/lib/db";
 import { addDays, addWeeks, startOfDay } from "date-fns";
 
 function nextDayOfWeek(fromDate: Date, targetDayOfWeek: number): Date {
-  const currentDay = fromDate.getDay();
+  // Use UTC day to make this timezone-independent.
+  // Without this, a server running in UTC vs the user's local timezone
+  // can pick different days, causing shifts to appear one day off.
+  const currentDay = fromDate.getUTCDay();
   const daysUntilTarget = (targetDayOfWeek - currentDay + 7) % 7;
   const result = addDays(fromDate, daysUntilTarget);
-  return startOfDay(result);
+  // Store at noon UTC so the date stays on the correct calendar day
+  // across all US timezones (noon UTC = 4am–8am US local).
+  result.setUTCHours(12, 0, 0, 0);
+  return result;
 }
 
 export async function ensureShiftsForCircle(
