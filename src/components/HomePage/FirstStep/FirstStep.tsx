@@ -12,7 +12,7 @@ const data = [
   {
     id: 1,
     title: "Log Into dashboard",
-    desc: "Search for circles in your area and join one that fits your needs.",
+    desc: "Log into your dashboard to manage your circles, view your progress, and access exclusive resources.",
     href: "/login",
   },
 ];
