@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // app/(auth)/login/LoginPage.tsx
 "use client";
 
@@ -191,7 +192,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className={styles.divider}>
+        {/* <div className={styles.divider}>
           <span>or</span>
         </div>
 
@@ -202,7 +203,7 @@ export default function LoginPage() {
           disabled={loading || !email}
         >
           Email me a sign-in link
-        </button>
+        </button> */}
 
         <p className={styles.registerPrompt}>
           Don&apos;t have an account?{" "}
