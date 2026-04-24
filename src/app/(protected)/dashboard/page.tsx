@@ -76,10 +76,7 @@ export default async function DashboardPage() {
         })
       : [];
 
-  const nextShiftByCircle = new Map<
-    string,
-    (typeof upcomingShifts)[number]
-  >();
+  const nextShiftByCircle = new Map<string, (typeof upcomingShifts)[number]>();
   const myNextShiftByCircle = new Map<
     string,
     (typeof upcomingShifts)[number]
@@ -179,19 +176,13 @@ export default async function DashboardPage() {
                       key={m.circle.id}
                       className={`${styles.circleCard} ${isArchived ? styles.circleCardArchived : ""}`}
                     >
-                      <Link
-                        href={`/circles/${m.circle.id}`}
-                        className={styles.cardBody}
-                      >
+                      <div className={styles.cardBody}>
                         <div className={styles.cardHeader}>
-                          <h3 className={styles.circleName}>
-                            {m.circle.name}
-                          </h3>
+                          <h3 className={styles.circleName}>{m.circle.name}</h3>
                           <span className={styles.roleBadge}>
                             {isArchived ? "ARCHIVED" : m.role}
                           </span>
                         </div>
-
                         <div className={styles.cardRecipient}>
                           <p className={styles.recipientLabel}>Recipient</p>
                           <p className={styles.recipientName}>
@@ -208,7 +199,6 @@ export default async function DashboardPage() {
                             </>
                           )}
                         </div>
-
                         <div className={styles.cardDetails}>
                           <div className={styles.cardDetail}>
                             <span className={styles.detailLabel}>Helpers</span>
@@ -235,7 +225,13 @@ export default async function DashboardPage() {
                             </span>
                           </div>
                         </div>
-                      </Link>
+                        <Link
+                          href={`/circles/${m.circle.id}`}
+                          className={styles.profileLink}
+                        >
+                          More Details
+                        </Link>
+                      </div>
 
                       {myNextShift && !isArchived && (
                         <Link
