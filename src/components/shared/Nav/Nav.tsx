@@ -10,11 +10,9 @@ import Logo from "../Logo/Logo";
 // import { useTransitionRouter } from "next-view-transitions";
 
 const navItems = [
-  { text: "About", href: "/about" },
-  { text: "Services", href: "/services" },
-  { text: "Works", href: "/works" },
-  { text: "Pricing", href: "/pricing" },
-  { text: "Contact", href: "/contact" },
+  { text: "dashboard", href: "/dashboard" },
+  { text: "create circle", href: "/create-circle" },
+
 ];
 
 const Nav = () => {
