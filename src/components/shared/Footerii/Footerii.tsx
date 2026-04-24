@@ -1,5 +1,5 @@
 import styles from "./Footerii.module.css";
-import Logo from "../Logo/Logo";
+// import Logo from "../Logo/Logo";
 
 export default function Footerii() {
   const currentYear = new Date().getFullYear();
@@ -8,14 +8,13 @@ export default function Footerii() {
     <footer className={styles.container}>
       <div className={styles.parent}>
         <div className={styles.content}>
-          <div className={styles.logoMobile}>
-            <Logo />
-          </div>
+          <div className={styles.logoMobile}>FP Helpers</div>
           <div className={styles.top}></div>
           <div className={styles.bottom}>
             <div className={styles.left}>
               <div className={styles.box}>
-                <Logo />
+                {/* <Logo /> */}
+                FP Helpers
               </div>
             </div>
             <div className={styles.right}>
