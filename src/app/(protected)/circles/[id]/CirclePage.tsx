@@ -253,7 +253,14 @@ export default function CirclePage({
                           {formatShiftDate(new Date(s.scheduledDate))}
                         </span>
                         <span className={styles.rotationDateFull}>
-                          {formatShiftFullDate(new Date(s.scheduledDate))}
+                          {new Date(s.scheduledDate).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "2-digit",
+                              day: "2-digit",
+                              year: "numeric",
+                            },
+                          )}
                         </span>
                       </div>
                       <div className={styles.rotationHelper}>

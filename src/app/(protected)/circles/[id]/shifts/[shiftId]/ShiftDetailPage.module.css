@@ -734,3 +734,9 @@
 .swapBannerInfo .swapBannerSubtitle {
   color: #666;
 }
+
+@media screen and (max-width: 568px) {
+  .section {
+    padding: 16px;
+  }
+  }

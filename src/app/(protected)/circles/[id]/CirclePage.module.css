@@ -518,9 +518,10 @@
 }
 
 .rotationDateFull {
-  font-size: 13px;
+  font-size: 14px;
   color: #888;
   font-weight: 500;
+  letter-spacing: normal;
 }
 
 .rotationHelper {
@@ -632,4 +633,30 @@
 .durationRemaining {
   color: var(--purple);
   font-weight: 700;
+}
+
+@media screen and (max-width: 568px) {
+  .section {
+    padding: 16px;
+  }
+  
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .rotationRow {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+
+  .rotationHelper {
+    justify-content: flex-start;
+    order: -1;
+  }
+
+  .rotationHelperName {
+    color: var(--purple);
+  }
 }
