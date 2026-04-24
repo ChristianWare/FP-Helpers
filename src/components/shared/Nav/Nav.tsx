@@ -3,7 +3,6 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import Button from "../Button/Button";
-import { usePathname } from "next/navigation";
 import styles from "./Nav.module.css";
 import Logo from "../Logo/Logo";
 // import ScrollIndicator from "../ScrollIndicator/ScrollIndicator";
@@ -27,7 +26,6 @@ const Nav = () => {
     setIsOpen((prev) => !prev);
   };
 
-  const pathname = usePathname();
 //   function slideInOut() {
 //     if (!document.startViewTransition) return;
 
@@ -94,27 +92,11 @@ const Nav = () => {
                   <Link
                     href={navItem.href}
                     className={styles.navItem}
-                    onClick={(e) => {
-                      e.preventDefault();
+                    onClick={() => {
                       setIsOpen(false);
-
-                    //   if (!document.startViewTransition) {
-                    //     router.push(navItem.href);
-                    //     return;
-                    //   }
-
-                    //   const transition = document.startViewTransition(() => {
-                    //     router.push(navItem.href);
-                    //   });
-
-                    //   transition.ready.then(() => {
-                    //     // Trigger your animations here
-                    //     slideInOut();
-                    //   });
                     }}
                   >
-                    {pathname.includes(navItem.href) && <>{navItem.text}</>}
-                    {!pathname.includes(navItem.href) && navItem.text}
+                    {navItem.text}
                   </Link>
                 </li>
               ))}
