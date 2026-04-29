@@ -400,16 +400,36 @@ export default function MyCirclePage({
                   {formatRotationDay(rotationDayOfWeek)}
                 </span>
               </div>
-              <div className={styles.shiftList}>
+
+              <div className={styles.rotationList}>
                 {remainingShifts.map((shift) => (
-                  <div key={shift.id} className={styles.shiftRow}>
-                    <div className={styles.shiftDate}>
-                      {formatShiftDate(new Date(shift.scheduledDate))}
+                  <div key={shift.id} className={styles.rotationRow}>
+                    <div className={styles.rotationDate}>
+                      <span className={styles.rotationDateMain}>
+                        {formatShiftDate(new Date(shift.scheduledDate))}
+                      </span>
+                      <span className={styles.rotationDateFull}>
+                        {new Date(shift.scheduledDate).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "2-digit",
+                            day: "2-digit",
+                            year: "numeric",
+                          },
+                        )}
+                      </span>
                     </div>
-                    <div className={styles.shiftHelper}>
-                      {shift.helper
-                        ? `${shift.helper.firstName} ${shift.helper.lastName}`
-                        : "Not yet assigned"}
+                    <div className={styles.rotationHelper}>
+                      {shift.helper ? (
+                        <span className={styles.rotationHelperName}>
+                          {shift.helper.firstName}{" "}
+                          {shift.helper.lastName.charAt(0)}.
+                        </span>
+                      ) : (
+                        <span className={styles.rotationUnassigned}>
+                          Not yet assigned
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}

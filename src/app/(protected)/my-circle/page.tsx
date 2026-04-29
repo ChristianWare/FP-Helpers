@@ -81,7 +81,7 @@ export default async function Page() {
       },
     },
     orderBy: { scheduledDate: "asc" },
-    take: 4,
+    take: Math.max(circle.memberships.length, 1),
   });
 
   const nextShiftId = upcomingShifts[0]?.id ?? null;
