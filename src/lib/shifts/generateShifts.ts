@@ -90,6 +90,24 @@ export async function ensureShiftsForCircle(
     if (lastAssignedIdx >= 0) {
       rotationIndex = (lastAssignedIdx + 1) % helpers.length;
     }
+  } else {
+    // The lookahead window is empty — e.g. the rotation day just changed
+    // and updateCircleSchedule wiped the future shifts. Continue the
+    // rotation from the most recent shift before the window instead of
+    // restarting at the top of the roster.
+    const lastPastShift = await db.shift.findFirst({
+      where: { circleId, scheduledDate: { lt: targetDates[0] } },
+      orderBy: { scheduledDate: "desc" },
+      select: { assignedUserId: true },
+    });
+    if (lastPastShift) {
+      const lastAssignedIdx = helpers.findIndex(
+        (h) => h.userId === lastPastShift.assignedUserId,
+      );
+      if (lastAssignedIdx >= 0) {
+        rotationIndex = (lastAssignedIdx + 1) % helpers.length;
+      }
+    }
   }
 
   const toCreate: {

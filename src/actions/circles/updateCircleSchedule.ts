@@ -103,6 +103,21 @@ export async function updateCircleSchedule(
 
   if (scheduleChanged) {
     try {
+      // Remove future shifts generated under the old schedule before
+      // regenerating, otherwise stale old-day shifts linger alongside
+      // the new ones. Past history is untouched: the date filter keeps
+      // anything already in the past, and the status filter preserves
+      // COMPLETED / MISSED / IN_PROGRESS / CANCELLED rows. Child records
+      // (grocery items, pickups, receipts, swap requests, events)
+      // cascade-delete with the shift; NotificationLog rows set-null.
+      await db.shift.deleteMany({
+        where: {
+          circleId,
+          scheduledDate: { gte: new Date() },
+          status: { in: ["SCHEDULED", "SWAPPED"] },
+        },
+      });
+
       await ensureShiftsForCircle(circleId);
     } catch (err) {
       console.error("[updateCircleSchedule] Failed to regenerate shifts:", err);
