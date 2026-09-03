@@ -15,7 +15,8 @@ import Confetti from "@/components/shared/Confetti/Confetti";
 import { formatCircleDuration } from "@/lib/circles/formatDuration";
 import RecipientSection from "./RecipientSection";
 import ScheduleSection from "./ScheduleSection";
-// 
+import RotationEditor from "./RotationEditor";
+//
 
 const DAYS_OF_WEEK = [
   "Sunday",
@@ -45,10 +46,10 @@ type Props = {
     name: string;
     status: string;
     address: string | null;
-    addressCity: string | null; 
-    addressState: string | null; 
-    addressZip: string | null; 
-    accessNotes: string | null; 
+    addressCity: string | null;
+    addressState: string | null;
+    addressZip: string | null;
+    accessNotes: string | null;
     rotationDayOfWeek: number;
     rotationCadence: string;
     typicalArrivalTime: string | null;
@@ -228,68 +229,12 @@ export default function CirclePage({
                 {helpersInRotation === 1 ? "helper" : "helpers"} in rotation
               </p>
 
-              <div className={styles.rotationList}>
-                {rotationShifts.map((s) => {
-                  const isMine = s.assignedUser?.id === currentUserId;
-                  const isComplete = s.status === "COMPLETED";
-
-                  const rowClass = [
-                    styles.rotationRow,
-                    isMine ? styles.rotationRowMine : "",
-                    isComplete ? styles.rotationRowCompleted : "",
-                    isComplete && isMine ? styles.rotationRowMineCompleted : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ");
-
-                  return (
-                    <Link
-                      key={s.id}
-                      href={`/circles/${circle.id}/shifts/${s.id}`}
-                      className={rowClass}
-                    >
-                      <div className={styles.rotationDate}>
-                        <span className={styles.rotationDateMain}>
-                          {formatShiftDate(new Date(s.scheduledDate))}
-                        </span>
-                        <span className={styles.rotationDateFull}>
-                          {new Date(s.scheduledDate).toLocaleDateString(
-                            "en-US",
-                            {
-                              month: "2-digit",
-                              day: "2-digit",
-                              year: "numeric",
-                            },
-                          )}
-                        </span>
-                      </div>
-                      <div className={styles.rotationHelper}>
-                        {s.assignedUser ? (
-                          <>
-                            <span className={styles.rotationHelperName}>
-                              {s.assignedUser.firstName}{" "}
-                              {s.assignedUser.lastName}
-                            </span>
-                            {isComplete ? (
-                              <span className={styles.completedBadge}>
-                                ✓ Complete
-                              </span>
-                            ) : isMine ? (
-                              <span className={styles.rotationMinePill}>
-                                You
-                              </span>
-                            ) : null}
-                          </>
-                        ) : (
-                          <span className={styles.rotationUnassigned}>
-                            Not yet assigned
-                          </span>
-                        )}
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
+              <RotationEditor
+                circleId={circle.id}
+                currentUserId={currentUserId}
+                isAdmin={isAdmin}
+                rotationShifts={rotationShifts}
+              />
             </section>
           )}
 
