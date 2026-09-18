@@ -1,5 +1,6 @@
 // lib/shifts/generateShifts.ts
 import { db } from "@/lib/db";
+import { normalizeRotation } from "@/lib/shifts/rotationOrder";
 import {
   addDaysToKey,
   computeScheduleKeys,
@@ -180,7 +181,11 @@ export async function ensureShiftsForCircle(
         lte: new Date(`${lastKey}T23:59:59.999Z`),
       },
     },
-    select: { scheduledDate: true, assignedUserId: true },
+    select: {
+      scheduledDate: true,
+      assignedUserId: true,
+      originalAssignedUserId: true,
+    },
     orderBy: { scheduledDate: "asc" },
   });
 
@@ -203,23 +208,26 @@ export async function ensureShiftsForCircle(
   }
 
   // ——— Standard: continue the round-robin from whoever went last ———
+  // "Whoever went last" means whose TURN it was (originalAssignedUserId) —
+  // if that date was covered by someone else through a swap request, the
+  // rotation still continues from the person whose turn it was.
   let rotationIndex = 0;
-  const lastAssigned =
+  const lastShift =
     existingShifts.length > 0
-      ? existingShifts[existingShifts.length - 1].assignedUserId
-      : ((
-          await db.shift.findFirst({
-            // Window is empty (e.g. the schedule just changed and the future
-            // shifts were wiped) — pick up after the most recent past shift
-            // instead of restarting at the top of the roster.
-            where: {
-              circleId,
-              scheduledDate: { lt: dateKeyToNoonUtc(firstKey) },
-            },
-            orderBy: { scheduledDate: "desc" },
-            select: { assignedUserId: true },
-          })
-        )?.assignedUserId ?? null);
+      ? existingShifts[existingShifts.length - 1]
+      : await db.shift.findFirst({
+          // Window is empty (e.g. the schedule just changed and the future
+          // shifts were wiped) — pick up after the most recent past shift
+          // instead of restarting at the top of the roster.
+          where: {
+            circleId,
+            scheduledDate: { lt: dateKeyToNoonUtc(firstKey) },
+          },
+          orderBy: { scheduledDate: "desc" },
+          select: { assignedUserId: true, originalAssignedUserId: true },
+        });
+  const lastAssigned =
+    lastShift?.originalAssignedUserId ?? lastShift?.assignedUserId ?? null;
 
   if (lastAssigned) {
     const lastIdx = helpers.findIndex((h) => h.userId === lastAssigned);
@@ -243,14 +251,15 @@ export async function ensureShiftsForCircle(
 }
 
 /**
- * Re-deal the upcoming shifts round-robin after the roster changes (someone
- * joined). STANDARD circles only — in a meal train people chose their days,
- * and nothing is ever allowed to reshuffle them.
+ * Bring the upcoming shifts in line with the rotation after the roster
+ * changes (someone joined). STANDARD circles only — in a meal train people
+ * chose their days, and nothing is ever allowed to reshuffle them.
  *
- * Shifts that were deliberately moved are left alone: a claimed swap or an
- * admin's drag-and-drop edit changes assignedUserId but not
- * originalAssignedUserId, so "assigned ≠ original" marks a manual change.
- * Shifts with an open swap request are also left for that flow to resolve.
+ * This used to restart the rotation from the top of the roster at the next
+ * upcoming date, which could hand someone two turns in a row and move
+ * everyone's dates whenever a helper joined. It now keeps the order people
+ * are already due to serve in and adds the new helper at the END — nobody's
+ * upcoming date moves. (See lib/shifts/rotationOrder.ts.)
  */
 export async function rebalanceShiftsForCircle(
   circleId: string,
@@ -261,63 +270,7 @@ export async function rebalanceShiftsForCircle(
   });
   if (!circle || circle.circleType === "MEAL_TRAIN") return 0;
 
-  const memberships = await db.circleMembership.findMany({
-    where: {
-      circleId,
-      active: true,
-      inRotation: true,
-      rotationOrder: { gte: 0 },
-      role: { in: ["ADMIN", "HELPER"] },
-    },
-    orderBy: { rotationOrder: "asc" },
-    select: { userId: true },
-  });
-
-  if (memberships.length === 0) return 0;
-  const roster = new Set(memberships.map((m) => m.userId));
-
-  const shifts = await db.shift.findMany({
-    where: {
-      circleId,
-      scheduledDate: { gt: shiftDayCutoff() },
-      status: "SCHEDULED",
-    },
-    orderBy: { scheduledDate: "asc" },
-    select: {
-      id: true,
-      assignedUserId: true,
-      originalAssignedUserId: true,
-      swapRequests: { where: { status: "OPEN" }, select: { id: true } },
-    },
-  });
-
-  let updated = 0;
-  for (let i = 0; i < shifts.length; i++) {
-    const shift = shifts[i];
-    const correctUserId = memberships[i % memberships.length].userId;
-
-    const manuallyMoved =
-      !!shift.assignedUserId &&
-      !!shift.originalAssignedUserId &&
-      shift.assignedUserId !== shift.originalAssignedUserId &&
-      roster.has(shift.assignedUserId);
-    const hasOpenSwap = shift.swapRequests.length > 0;
-
-    if (manuallyMoved || hasOpenSwap) continue;
-
-    if (shift.assignedUserId !== correctUserId) {
-      await db.shift.update({
-        where: { id: shift.id },
-        data: {
-          assignedUserId: correctUserId,
-          originalAssignedUserId: correctUserId,
-        },
-      });
-      updated++;
-    }
-  }
-
-  return updated;
+  return normalizeRotation(circleId);
 }
 
 /**

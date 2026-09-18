@@ -1,24 +1,29 @@
 // actions/shifts/swapRotationAssignments.ts
 //
-// Admin-only rotation edit: swaps the assigned helpers of two upcoming
-// shifts (drag-and-drop on the circle page). One swap per call.
-// Race-safe via guarded updateMany inside a transaction, and logged as
-// REASSIGNED ShiftEvents on both shifts for the audit trail.
-// originalAssignedUserId is intentionally left untouched (same convention
-// as the helper swap flow — it preserves who was originally in rotation).
+// Admin-only: the helpers on two upcoming dates TRADE PLACES IN THE ROTATION,
+// permanently — every upcoming shift is re-dealt, so it holds for every
+// future turn, not just the two dates that were tapped.
 "use server";
 
 import { auth } from "../../../auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import {
+  applyRotationOrder,
+  getRotationRoster,
+  getUpcomingSlots,
+  inferRotationOrder,
+  swapInOrder,
+} from "@/lib/shifts/rotationOrder";
+import { shiftDayCutoff } from "@/lib/shifts/scheduleDates";
 
-type Result = { success: true } | { success: false; error: string };
+type SwapOutcome = { success: true } | { success: false; error: string };
 
 export async function swapRotationAssignments(
   circleId: string,
   shiftIdA: string,
   shiftIdB: string,
-): Promise<Result> {
+): Promise<SwapOutcome> {
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: "Not signed in" };
@@ -28,14 +33,8 @@ export async function swapRotationAssignments(
     return { success: false, error: "Pick two different dates to swap" };
   }
 
-  // Only circle admins (or the super admin) can edit the rotation
   const membership = await db.circleMembership.findUnique({
-    where: {
-      userId_circleId: {
-        userId: session.user.id,
-        circleId,
-      },
-    },
+    where: { userId_circleId: { userId: session.user.id, circleId } },
     select: { role: true },
   });
 
@@ -44,7 +43,6 @@ export async function swapRotationAssignments(
     return { success: false, error: "Only admins can change the rotation" };
   }
 
-  // Load both shifts
   const shifts = await db.shift.findMany({
     where: { id: { in: [shiftIdA, shiftIdB] }, circleId },
     select: {
@@ -65,9 +63,7 @@ export async function swapRotationAssignments(
     };
   }
 
-  // Both must be upcoming, untouched shifts with someone assigned
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const cutoff = shiftDayCutoff();
 
   for (const shift of [shiftA, shiftB]) {
     if (shift.status !== "SCHEDULED") {
@@ -76,7 +72,7 @@ export async function swapRotationAssignments(
         error: "Only upcoming shifts can be moved (this one has started)",
       };
     }
-    if (shift.scheduledDate < today) {
+    if (shift.scheduledDate <= cutoff) {
       return { success: false, error: "Shifts in the past can't be moved" };
     }
     if (!shift.assignedUserId) {
@@ -97,61 +93,40 @@ export async function swapRotationAssignments(
     };
   }
 
-  // The atomic swap. Each updateMany is guarded on the status AND the
-  // assignee we just read — if either shift changed under us (completed,
-  // swapped by a helper, reassigned by another admin), count comes back 0
-  // and the whole transaction rolls back.
   try {
-    await db.$transaction(async (tx) => {
-      const resA = await tx.shift.updateMany({
-        where: { id: shiftA.id, status: "SCHEDULED", assignedUserId: userA },
-        data: { assignedUserId: userB },
-      });
-      if (resA.count === 0) throw new Error("STALE");
+    const roster = await getRotationRoster(circleId);
+    const slots = await getUpcomingSlots(circleId);
+    const currentOrder = inferRotationOrder(
+      roster.map((m) => m.userId),
+      slots,
+    );
 
-      const resB = await tx.shift.updateMany({
-        where: { id: shiftB.id, status: "SCHEDULED", assignedUserId: userB },
-        data: { assignedUserId: userA },
-      });
-      if (resB.count === 0) throw new Error("STALE");
-
-      // Audit trail — one REASSIGNED event per shift
-      await tx.shiftEvent.createMany({
-        data: [
-          {
-            shiftId: shiftA.id,
-            type: "REASSIGNED",
-            actorId: session.user.id,
-            metadata: {
-              fromUserId: userA,
-              toUserId: userB,
-              swappedWithShiftId: shiftB.id,
-              reason: "admin_rotation_change",
-            },
-          },
-          {
-            shiftId: shiftB.id,
-            type: "REASSIGNED",
-            actorId: session.user.id,
-            metadata: {
-              fromUserId: userB,
-              toUserId: userA,
-              swappedWithShiftId: shiftA.id,
-              reason: "admin_rotation_change",
-            },
-          },
-        ],
-      });
-    });
-  } catch (err) {
-    if (err instanceof Error && err.message === "STALE") {
+    // A date traded through a swap request shows the person COVERING it, so
+    // it can't stand in for anyone's place in the order.
+    const traded = slots.find(
+      (slot) =>
+        (slot.id === shiftA.id || slot.id === shiftB.id) && slot.hasSwapRequest,
+    );
+    if (traded) {
       return {
         success: false,
         error:
-          "One of those shifts just changed (completed or reassigned). Refresh and try again.",
+          "One of those dates has a swap request on it, so it isn't part of the regular order. Pick that helper's regular date instead.",
       };
     }
-    console.error("[swapRotationAssignments] Transaction error:", err);
+
+    const newOrder = swapInOrder(currentOrder, userA, userB);
+    if (!newOrder) {
+      return {
+        success: false,
+        error:
+          "One of those helpers isn't in the rotation anymore. Refresh and try again.",
+      };
+    }
+
+    await applyRotationOrder(circleId, newOrder, session.user.id);
+  } catch (err) {
+    console.error("[swapRotationAssignments] Failed:", err);
     return { success: false, error: "Something went wrong. Please try again." };
   }
 

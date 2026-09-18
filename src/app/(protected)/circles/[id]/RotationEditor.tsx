@@ -2,9 +2,10 @@
 //
 // Renders the rotation list. For admins, a "Change rotation" button turns
 // on edit mode: drag one helper's row onto another date (or tap a row,
-// then tap the destination — works on phones) to propose a swap of the
-// two assignments. A confirmation modal spells out exactly who moves
-// where before anything is saved. One change at a time by design.
+// then tap the destination — works on phones) to propose that the two
+// helpers trade places in the rotation. A confirmation modal spells out
+// exactly who moves where before anything is saved. One change at a time
+// by design.
 "use client";
 
 import { useState } from "react";
@@ -199,7 +200,8 @@ export default function RotationEditor({
             <>
               <p className={styles.hint}>
                 Drag a helper onto another date — or tap one, then tap where
-                they should go. You&apos;ll confirm before anything changes.
+                they should go. The two trade places in the rotation from now
+                on, not just on these dates. You&apos;ll confirm first.
               </p>
               <button
                 type='button'
@@ -335,7 +337,8 @@ export default function RotationEditor({
             <div className={styles.modalIcon}>🔁</div>
             <h2 className={styles.modalTitle}>Change the rotation?</h2>
             <p className={styles.modalMessage}>
-              These two helpers will trade dates:
+              These two helpers will trade places in the rotation — starting
+              with these dates, and every turn after:
             </p>
 
             <div className={styles.swapPreview}>
