@@ -4,6 +4,7 @@
 import { db } from "@/lib/db";
 import { Resend } from "resend";
 import { buildCircleCompletedEmail } from "@/lib/emails/circleCompleted";
+import { currentShiftDayStart } from "@/lib/shifts/scheduleDates";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -25,13 +26,18 @@ export async function archiveExpiredCircles(): Promise<ArchiveResult> {
     errors: [],
   };
 
-  const now = new Date();
+  // A circle ends when its LAST DAY is over — not when that day begins.
+  // Comparing against "now" archived circles on the morning of their final
+  // day, before that day's visit had happened. currentShiftDayStart() is
+  // midnight of today, so an end date of today is still in the future.
+  // (Works for end dates stored either as midnight or as end-of-day.)
+  const endedBefore = currentShiftDayStart();
 
-  // Find circles whose endDate has passed but are still ACTIVE
+  // Find circles whose last day has passed but are still ACTIVE
   const expiredCircles = await db.careCircle.findMany({
     where: {
       durationType: "FIXED",
-      endDate: { lt: now },
+      endDate: { lt: endedBefore },
       status: "ACTIVE",
     },
     include: {

@@ -1,0 +1,182 @@
+/* app/(protected)/circles/[id]/shifts/[shiftId]/MealShiftPage.module.css
+   Only what the meal version adds — everything else comes from
+   ShiftDetailPage.module.css so the two pages stay visually identical. */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  letter-spacing: normal;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  border: 1px solid var(--gray);
+  border-radius: 10px;
+  background: #fff;
+  color: #111;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--purple);
+}
+
+.hint {
+  font-size: 13px;
+  color: #888;
+  line-height: 1.5;
+  margin: 2px 0 0;
+  hyphens: none;
+}
+
+.formActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.editBtn,
+.primaryBtn,
+.cancelBtn {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.editBtn {
+  padding: 8px 16px;
+  font-size: 14px;
+  border: 1px solid var(--purple);
+  border-radius: 8px;
+  color: var(--purple);
+}
+
+.editBtn:hover {
+  background: var(--purple);
+  color: var(--tan);
+}
+
+.primaryBtn,
+.cancelBtn {
+  padding: 12px 20px;
+  font-size: 15px;
+  border-radius: 10px;
+}
+
+.primaryBtn {
+  background: var(--purple);
+  color: var(--tan);
+}
+
+.primaryBtn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.cancelBtn {
+  color: #666;
+  border: 1px solid var(--gray);
+}
+
+.cancelBtn:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+
+.primaryBtn:disabled,
+.cancelBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.editBtn:focus-visible,
+.primaryBtn:focus-visible,
+.cancelBtn:focus-visible {
+  outline: 3px solid rgba(95, 70, 223, 0.35);
+  outline-offset: 2px;
+}
+
+/* ——— The meal ——— */
+
+.mealCard {
+  padding: 20px;
+  background: #faf7ff;
+  border: 1px solid #ddd6fe;
+  border-radius: 12px;
+}
+
+.mealName {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  hyphens: none;
+}
+
+.mealNotes {
+  font-size: 15px;
+  color: #555;
+  margin: 8px 0 0;
+  line-height: 1.5;
+  white-space: pre-line;
+  hyphens: none;
+}
+
+/* ——— Allergies: safety information, so it stands apart ——— */
+
+.allergyBlock {
+  padding: 14px 16px;
+  background: #fef9c3;
+  border: 1px solid #fde047;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.allergyLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 14px;
+  font-weight: 700;
+  color: #854d0e;
+  margin: 0 0 4px;
+}
+
+.allergyText {
+  font-size: 16px;
+  font-weight: 600;
+  color: #713f12;
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-line;
+  hyphens: none;
+}
+
+.preLine {
+  white-space: pre-line;
+}

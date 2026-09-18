@@ -15,6 +15,14 @@ import {
   ensureShiftsForCircle,
   rebalanceShiftsForCircle,
 } from "@/lib/shifts/generateShifts";
+import {
+  currentShiftDayKey,
+  dateInputToEnd,
+  dateInputToStart,
+  dateKeyToNoonUtc,
+  firstOccurrenceKey,
+  resolveScheduleDays,
+} from "@/lib/shifts/scheduleDates";
 import bcryptjs from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
@@ -34,6 +42,7 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
   }
 
   const {
+    circleType,
     circleName,
     recipientFirstName,
     recipientLastName,
@@ -45,14 +54,40 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
     addressState,
     addressZip,
     accessNotes,
-    rotationDayOfWeek,
     rotationCadence,
     typicalArrivalTime,
     durationType,
     startDate,
     endDate,
-    organizerInRotation,
+    mealHouseholdSize,
+    mealAllergies,
+    mealPreferences,
   } = validated.data;
+
+  const isMealTrain = circleType === "MEAL_TRAIN";
+
+  // In a meal train nobody is "in the rotation" — people pick their own days.
+  const organizerInRotation = isMealTrain
+    ? false
+    : validated.data.organizerInRotation;
+
+  // "Every day" / "One day a week" / "Several days a week" → the stored array
+  const rotationDaysOfWeek = resolveScheduleDays(validated.data);
+  if (rotationDaysOfWeek.length === 0) {
+    return { error: "Please pick at least one day of the week." };
+  }
+
+  const isFixed = durationType === "FIXED";
+  const startAt = isFixed && startDate ? dateInputToStart(startDate) : null;
+  const endAt = isFixed && endDate ? dateInputToEnd(endDate) : null;
+
+  // The first real visit — anchors "every other week" so it can never drift.
+  const todayKey = currentShiftDayKey();
+  const scheduleFromKey =
+    isFixed && startDate && startDate > todayKey ? startDate : todayKey;
+  const scheduleAnchorDate = dateKeyToNoonUtc(
+    firstOccurrenceKey(rotationDaysOfWeek, scheduleFromKey),
+  );
 
   const normalizedRecipientEmail = recipientEmail.toLowerCase().trim();
   const normalizedRecipientPhone = recipientPhone.replace(/\D/g, "");
@@ -98,14 +133,20 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
           addressState: addressState?.trim() || null,
           addressZip: addressZip?.trim() || null,
           accessNotes: accessNotes?.trim() || null,
-          rotationDayOfWeek,
+          circleType,
+          rotationDaysOfWeek,
+          rotationDayOfWeek: rotationDaysOfWeek[0], // legacy column, kept in sync
           rotationCadence,
+          scheduleAnchorDate,
           typicalArrivalTime: typicalArrivalTime?.trim() || null,
           durationType,
-          startDate:
-            durationType === "FIXED" && startDate ? new Date(startDate) : null,
-          endDate:
-            durationType === "FIXED" && endDate ? new Date(endDate) : null,
+          startDate: startAt,
+          endDate: endAt,
+          mealHouseholdSize: isMealTrain
+            ? mealHouseholdSize?.trim() || null
+            : null,
+          mealAllergies: isMealTrain ? mealAllergies?.trim() || null : null,
+          mealPreferences: isMealTrain ? mealPreferences?.trim() || null : null,
         },
       });
 
@@ -157,34 +198,38 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
     console.error("[createCircle] Failed to generate initial shifts:", err);
   }
 
-  if (!existingRecipient) {
-    try {
-      const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/login`;
+  // Tell the recipient. If they already had an account, the password typed
+  // into the wizard was NOT applied (we never overwrite someone's password),
+  // so that version of the email tells them to sign in the way they always do.
+  try {
+    const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/login`;
 
-      const { subject, html, text } = buildCircleWelcomeEmail({
-        recipientFirstName: recipientFirstName.trim(),
-        recipientEmail: normalizedRecipientEmail,
-        recipientPassword,
-        organizerFirstName: session.user.firstName ?? "Your friend",
-        organizerLastName: session.user.lastName ?? "",
-        circleName: circleName.trim(),
-        loginUrl,
-      });
+    const { subject, html, text } = buildCircleWelcomeEmail({
+      recipientFirstName: existingRecipient
+        ? existingRecipient.firstName
+        : recipientFirstName.trim(),
+      recipientEmail: normalizedRecipientEmail,
+      recipientPassword: existingRecipient ? null : recipientPassword,
+      organizerFirstName: session.user.firstName ?? "Your friend",
+      organizerLastName: session.user.lastName ?? "",
+      circleName: circleName.trim(),
+      loginUrl,
+      circleType,
+    });
 
-      const emailResult = await resend.emails.send({
-        from: process.env.EMAIL_FROM!,
-        to: normalizedRecipientEmail,
-        subject,
-        html,
-        text,
-      });
+    const emailResult = await resend.emails.send({
+      from: process.env.EMAIL_FROM!,
+      to: normalizedRecipientEmail,
+      subject,
+      html,
+      text,
+    });
 
-      if (emailResult.error) {
-        console.error("[createCircle] Welcome email error:", emailResult.error);
-      }
-    } catch (error) {
-      console.error("[createCircle] Welcome email failed:", error);
+    if (emailResult.error) {
+      console.error("[createCircle] Welcome email error:", emailResult.error);
     }
+  } catch (error) {
+    console.error("[createCircle] Welcome email failed:", error);
   }
 
   revalidatePath("/dashboard");
@@ -194,5 +239,7 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
   return {
     success: true,
     circleId,
+    // Lets the success banner explain why the password wasn't used
+    recipientHadAccount: !!existingRecipient,
   };
 };

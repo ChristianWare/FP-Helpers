@@ -1,13 +1,21 @@
 // lib/emails/circleWelcome.ts
+import { esc } from "@/lib/emails/mealTrain";
 
 type CircleWelcomeEmailProps = {
   recipientFirstName: string;
   recipientEmail: string;
-  recipientPassword: string;
+  /**
+   * The password the organizer set. Pass null when the recipient ALREADY had
+   * an account — their existing password is unchanged, so the email tells
+   * them to sign in the way they always do instead of showing a password
+   * that wouldn't work.
+   */
+  recipientPassword: string | null;
   organizerFirstName: string;
   organizerLastName: string;
   circleName: string;
   loginUrl: string;
+  circleType?: "STANDARD" | "MEAL_TRAIN";
 };
 
 export function buildCircleWelcomeEmail({
@@ -18,9 +26,55 @@ export function buildCircleWelcomeEmail({
   organizerLastName,
   circleName,
   loginUrl,
+  circleType = "STANDARD",
 }: CircleWelcomeEmailProps) {
-  const organizerName = `${organizerFirstName} ${organizerLastName}`;
-  const subject = `${organizerFirstName} set up some help for you`;
+  const organizerName = `${organizerFirstName} ${organizerLastName}`.trim();
+  const isMealTrain = circleType === "MEAL_TRAIN";
+
+  const subject = isMealTrain
+    ? `${organizerFirstName} set up a meal train for you`
+    : `${organizerFirstName} set up some help for you`;
+
+  // ——— Copy that differs by circle type ———
+  const introText = isMealTrain
+    ? `Your friend ${organizerName} set up ${circleName} so people can bring you meals.`
+    : `Your friend ${organizerName} set up ${circleName} to help you out with groceries and errands.`;
+
+  const detailText = isMealTrain
+    ? `Friends pick the days that work for them and say what they're bringing. Sign in any time to see who's coming and when — and to tell everyone about allergies or foods you'd rather skip.`
+    : `Each week, one of your friends will check in to see what you need from the store. You can add what you want whenever it comes to mind — no need to remember everything at once.`;
+
+  // ——— Sign-in block: new account vs. existing account ———
+  const credentialsHtml = recipientPassword
+    ? `
+      <div style="background: #f7f7f8; border-radius: 10px; padding: 24px; margin: 0 0 24px;">
+        <p style="margin: 0 0 4px; font-size: 14px; font-weight: 700; color: #666; text-transform: uppercase;">
+          Your sign-in details
+        </p>
+        <table role="presentation" style="width: 100%; margin-top: 12px;">
+          <tr>
+            <td style="padding: 8px 0; font-size: 15px; color: #666; width: 80px;">Email</td>
+            <td style="padding: 8px 0; font-size: 16px; font-weight: 600; color: #111;">${esc(recipientEmail)}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; font-size: 15px; color: #666; width: 80px;">Password</td>
+            <td style="padding: 8px 0; font-size: 16px; font-weight: 600; color: #111;">${esc(recipientPassword)}</td>
+          </tr>
+        </table>
+      </div>`
+    : `
+      <div style="background: #f7f7f8; border-radius: 10px; padding: 24px; margin: 0 0 24px;">
+        <p style="margin: 0 0 8px; font-size: 14px; font-weight: 700; color: #666; text-transform: uppercase;">
+          You already have an account
+        </p>
+        <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #333;">
+          Sign in with <strong>${esc(recipientEmail)}</strong> and the password you already use. Forgot it? There&rsquo;s a reset link on the sign-in page.
+        </p>
+      </div>`;
+
+  const credentialsText = recipientPassword
+    ? `Your sign-in details:\nEmail: ${recipientEmail}\nPassword: ${recipientPassword}`
+    : `You already have an account — sign in with ${recipientEmail} and the password you already use. Forgot it? There's a reset link on the sign-in page.`;
 
   const html = `
     <!DOCTYPE html>
@@ -37,35 +91,21 @@ export function buildCircleWelcomeEmail({
                 <tr>
                   <td style="padding: 40px 32px;">
                     <h1 style="margin: 0 0 16px; font-size: 24px; font-weight: 700; color: #111; line-height: 1.3;">
-                      Hi ${recipientFirstName} — here to help.
+                      Hi ${esc(recipientFirstName)} — here to help.
                     </h1>
                     <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #333;">
-                      Your friend <strong>${organizerName}</strong> set up <strong>${circleName}</strong> to help you out with groceries and errands.
+                      ${esc(introText)}
                     </p>
                     <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.6; color: #333;">
-                      Each week, one of your friends will check in to see what you need from the store. You can add what you want whenever it comes to mind — no need to remember everything at once.
+                      ${esc(detailText)}
                     </p>
 
-                    <div style="background: #f7f7f8; border-radius: 10px; padding: 24px; margin: 0 0 24px;">
-                      <p style="margin: 0 0 4px; font-size: 14px; font-weight: 700; color: #666; text-transform: uppercase;">
-                        Your sign-in details
-                      </p>
-                      <table role="presentation" style="width: 100%; margin-top: 12px;">
-                        <tr>
-                          <td style="padding: 8px 0; font-size: 15px; color: #666; width: 80px;">Email</td>
-                          <td style="padding: 8px 0; font-size: 16px; font-weight: 600; color: #111;">${recipientEmail}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 8px 0; font-size: 15px; color: #666; width: 80px;">Password</td>
-                          <td style="padding: 8px 0; font-size: 16px; font-weight: 600; color: #111;">${recipientPassword}</td>
-                        </tr>
-                      </table>
-                    </div>
+                    ${credentialsHtml}
 
                     <table role="presentation" style="margin: 0 0 24px;">
                       <tr>
                         <td style="background-color: #111; border-radius: 8px;">
-                          <a href="${loginUrl}" style="display: inline-block; padding: 16px 36px; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none;">
+                          <a href="${esc(loginUrl)}" style="display: inline-block; padding: 16px 36px; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none;">
                             Sign in now
                           </a>
                         </td>
@@ -73,11 +113,11 @@ export function buildCircleWelcomeEmail({
                     </table>
 
                     <p style="margin: 0 0 8px; font-size: 14px; color: #888; line-height: 1.5;">
-                      If you have trouble signing in, reach out to ${organizerFirstName} — they set this up for you and can help.
+                      If you have trouble signing in, reach out to ${esc(organizerFirstName)} — they set this up for you and can help.
                     </p>
                     <hr style="border: none; border-top: 1px solid #eee; margin: 28px 0;" />
                     <p style="margin: 0; font-size: 14px; color: #999; line-height: 1.5;">
-                      If you weren&rsquo;t expecting this, you can safely ignore this email or reach out to ${organizerFirstName}.
+                      If you weren&rsquo;t expecting this, you can safely ignore this email or reach out to ${esc(organizerFirstName)}.
                     </p>
                   </td>
                 </tr>
@@ -94,13 +134,11 @@ export function buildCircleWelcomeEmail({
 
   const text = `Hi ${recipientFirstName} — here to help.
 
-Your friend ${organizerName} set up ${circleName} to help you out with groceries and errands.
+${introText}
 
-Each week, one of your friends will check in to see what you need from the store. You can add what you want whenever it comes to mind.
+${detailText}
 
-Your sign-in details:
-Email: ${recipientEmail}
-Password: ${recipientPassword}
+${credentialsText}
 
 Sign in here: ${loginUrl}
 

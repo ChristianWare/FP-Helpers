@@ -4,6 +4,12 @@ import { redirect, notFound } from "next/navigation";
 import { getShiftDetails } from "@/lib/shifts/getShiftDetails";
 import { db } from "@/lib/db";
 import ShiftDetailPage from "./ShiftDetailPage";
+import MealShiftPage from "./MealShiftPage";
+import { formatCircleAddress } from "@/lib/circles/formatAddress";
+import {
+  describeReminderDays,
+  effectiveReminderDays,
+} from "@/lib/shifts/reminderDays";
 
 export default async function Page({
   params,
@@ -33,6 +39,64 @@ export default async function Page({
   }
 
   const isAssignedHelper = shift.assignedUserId === session.user.id;
+
+  const reminderDays = effectiveReminderDays(shift.circle);
+  const notifications = shift.notifications.map((n) => ({
+    id: n.id,
+    template: n.template,
+    channel: n.channel,
+    status: n.status,
+    sentAt: n.sentAt?.toISOString() ?? null,
+    createdAt: n.createdAt.toISOString(),
+    error: n.error,
+  }));
+
+  // ——— Meal train: a different page entirely ———
+  // No grocery list, prescriptions or swaps — it's about the meal, who it's
+  // for, and where it goes.
+  if (shift.circle.circleType === "MEAL_TRAIN") {
+    const { line1, line2 } = formatCircleAddress(shift.circle);
+    const canSignUp =
+      !!membership &&
+      membership.active &&
+      (membership.role === "HELPER" || membership.role === "ADMIN");
+
+    return (
+      <MealShiftPage
+        currentUserName={session.user.firstName ?? "there"}
+        currentUserEmail={session.user.email ?? ""}
+        isAssignedHelper={isAssignedHelper}
+        isAdmin={membership?.role === "ADMIN"}
+        canSignUp={canSignUp}
+        shift={{
+          id: shift.id,
+          scheduledDate: shift.scheduledDate.toISOString(),
+          status: shift.status,
+          completedAt: shift.completedAt?.toISOString() ?? null,
+          mealDescription: shift.mealDescription,
+          mealNotes: shift.mealNotes,
+          assignedUser: shift.assignedUser,
+        }}
+        circle={{
+          id: shift.circle.id,
+          name: shift.circle.name,
+          addressLine1: line1,
+          addressLine2: line2,
+          accessNotes: shift.circle.accessNotes,
+          typicalArrivalTime: shift.circle.typicalArrivalTime,
+          emergencyContact: shift.circle.emergencyContact,
+          emergencyPhone: shift.circle.emergencyPhone,
+          mealHouseholdSize: shift.circle.mealHouseholdSize,
+          mealAllergies: shift.circle.mealAllergies,
+          mealPreferences: shift.circle.mealPreferences,
+        }}
+        recipient={shift.circle.recipient}
+        notifications={notifications}
+        reminderSummary={describeReminderDays(reminderDays)}
+        reminderDays={reminderDays}
+      />
+    );
+  }
 
   // Determine if the current user is eligible to claim a swap on this shift
   //   - Must be an active, in-rotation helper or admin
@@ -100,15 +164,9 @@ export default async function Page({
         pharmacyAddress: rx.defaultPharmacy?.address ?? null,
         notes: rx.notes,
       }))}
-      notifications={shift.notifications.map((n) => ({
-        id: n.id,
-        template: n.template,
-        channel: n.channel,
-        status: n.status,
-        sentAt: n.sentAt?.toISOString() ?? null,
-        createdAt: n.createdAt.toISOString(),
-        error: n.error,
-      }))}
+      notifications={notifications}
+      reminderSummary={describeReminderDays(reminderDays)}
+      reminderDays={reminderDays}
       otherHelperCount={otherHelperCount}
       openSwapRequest={
         openSwapRequest

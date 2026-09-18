@@ -3,20 +3,29 @@ import { auth } from "../../../../../auth";
 import { db } from "@/lib/db";
 import { redirect, notFound } from "next/navigation";
 import CirclePage from "./CirclePage";
+import { getCircleDays, shiftDayCutoff } from "@/lib/shifts/scheduleDates";
 
 export default async function Page({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ created?: string }>;
+  searchParams: Promise<{
+    created?: string;
+    existing?: string;
+    joined?: string;
+    taken?: string;
+  }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
   const { id: circleId } = await params;
-  const { created } = await searchParams;
+  const { created, existing, joined, taken } = await searchParams;
   const justCreated = created === "1";
+  const recipientHadAccount = existing === "1";
+  const justJoined = joined === "1";
+  const takenCount = Math.max(0, Math.min(99, Number(taken) || 0));
 
   const circle = await db.careCircle.findUnique({
     where: { id: circleId },
@@ -67,8 +76,10 @@ export default async function Page({
     ? `${baseUrl}/join/${circle.joinLinks[0].token}`
     : null;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // "Today or later" for shifts — see lib/shifts/scheduleDates.ts for why this
+  // isn't simply midnight UTC.
+  const cutoff = shiftDayCutoff();
+  const isMealTrain = circle.circleType === "MEAL_TRAIN";
 
   const helpersInRotationCount = await db.circleMembership.count({
     where: {
@@ -85,7 +96,7 @@ export default async function Page({
     where: {
       circleId: circle.id,
       status: { in: ["SCHEDULED", "IN_PROGRESS"] },
-      scheduledDate: { gte: today },
+      scheduledDate: { gt: cutoff },
     },
     include: {
       assignedUser: {
@@ -128,7 +139,7 @@ export default async function Page({
       circleId: circle.id,
       assignedUserId: session.user.id,
       status: { in: ["SCHEDULED", "IN_PROGRESS"] },
-      scheduledDate: { gte: today },
+      scheduledDate: { gt: cutoff },
     },
     orderBy: { scheduledDate: "asc" },
     select: {
@@ -136,6 +147,25 @@ export default async function Page({
       scheduledDate: true,
     },
   });
+
+  // Meal train: the whole calendar — open days, claimed days, and anything
+  // delivered today — rather than one turn of a rotation.
+  const mealSlots = isMealTrain
+    ? await db.shift.findMany({
+        where: {
+          circleId: circle.id,
+          status: { in: ["SCHEDULED", "IN_PROGRESS", "COMPLETED"] },
+          scheduledDate: { gt: cutoff },
+        },
+        include: {
+          assignedUser: {
+            select: { id: true, firstName: true, lastName: true },
+          },
+        },
+        orderBy: { scheduledDate: "asc" },
+        take: 200,
+      })
+    : [];
 
   return (
     <CirclePage
@@ -148,12 +178,16 @@ export default async function Page({
         addressState: circle.addressState,
         addressZip: circle.addressZip,
         accessNotes: circle.accessNotes,
-        rotationDayOfWeek: circle.rotationDayOfWeek,
+        circleType: circle.circleType,
+        rotationDaysOfWeek: getCircleDays(circle),
         rotationCadence: circle.rotationCadence,
         typicalArrivalTime: circle.typicalArrivalTime,
         durationType: circle.durationType,
         startDate: circle.startDate?.toISOString() ?? null,
         endDate: circle.endDate?.toISOString() ?? null,
+        mealHouseholdSize: circle.mealHouseholdSize,
+        mealAllergies: circle.mealAllergies,
+        mealPreferences: circle.mealPreferences,
       }}
       recipient={circle.recipient}
       memberships={circle.memberships.map((m) => ({
@@ -166,6 +200,17 @@ export default async function Page({
       currentUserRole={membership?.role ?? null}
       joinUrl={joinUrl}
       justCreated={justCreated}
+      recipientHadAccount={recipientHadAccount}
+      justJoined={justJoined}
+      takenCount={takenCount}
+      mealSlots={mealSlots.map((slot) => ({
+        id: slot.id,
+        scheduledDate: slot.scheduledDate.toISOString(),
+        status: slot.status,
+        mealDescription: slot.mealDescription,
+        mealNotes: slot.mealNotes,
+        assignedUser: slot.assignedUser,
+      }))}
       nextShiftByHelper={nextShiftByHelper}
       rotationShifts={rotationShifts.map((s) => ({
         id: s.id,

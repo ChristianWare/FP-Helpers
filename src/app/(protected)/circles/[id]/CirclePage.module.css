@@ -639,13 +639,13 @@
   .section {
     padding: 16px;
   }
-  
+
   .sectionHeader {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .rotationRow {
     grid-template-columns: 1fr;
     text-align: left;
@@ -659,4 +659,22 @@
   .rotationHelperName {
     color: var(--purple);
   }
+}
+
+/* ——— "Some of your days were taken" notice ——— */
+
+.noticeBanner {
+  padding: 16px 20px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+}
+
+.noticeText {
+  font-size: 15px;
+  color: #78350f;
+  line-height: 1.5;
+  margin: 0;
+  hyphens: none;
 }

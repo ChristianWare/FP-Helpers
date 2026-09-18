@@ -1,0 +1,73 @@
+/* app/(protected)/my-circle/MyMealTrainPage.module.css
+   Only what the meal train version adds — the rest is MyCirclePage.module.css */
+
+.bannerMeal {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 8px 0 12px;
+  color: inherit;
+  overflow-wrap: anywhere;
+  hyphens: none;
+}
+
+.openNote {
+  font-size: 15px;
+  color: #666;
+  font-style: italic;
+  line-height: 1.5;
+  margin: 0 0 16px;
+  hyphens: none;
+}
+
+.dayDetail {
+  min-width: 0;
+}
+
+.dayHelper {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.dayMeal,
+.dayMealMissing,
+.dayNotes,
+.dayOpen {
+  margin: 2px 0 0;
+  font-size: 15px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  hyphens: none;
+}
+
+.dayMeal {
+  color: #333;
+}
+
+.dayMealMissing,
+.dayOpen {
+  color: #999;
+  font-style: italic;
+}
+
+.dayOpen {
+  margin: 0;
+}
+
+.dayNotes {
+  font-size: 14px;
+  color: #777;
+  white-space: pre-line;
+}
+
+.organizerTag {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--purple);
+  margin: 2px 0 6px;
+}

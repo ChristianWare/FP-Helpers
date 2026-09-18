@@ -2,8 +2,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sendShiftReminder } from "@/lib/notifications/sendShiftReminder";
+import { sendOpenDayNudges } from "@/lib/notifications/mealTrainEmails";
 import { ensureShiftsForCircle } from "@/lib/shifts/generateShifts";
 import { archiveExpiredCircles } from "@/lib/circles/archiveExpiredCircles";
+import { effectiveReminderDays } from "@/lib/shifts/reminderDays";
+import { addDaysToKey, currentShiftDayKey } from "@/lib/shifts/scheduleDates";
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -18,6 +21,10 @@ export async function GET(request: NextRequest) {
     where: { status: "ACTIVE" },
     select: {
       id: true,
+      circleType: true,
+      rotationCadence: true,
+      rotationDaysOfWeek: true,
+      rotationDayOfWeek: true,
       reminderDaysBefore: true,
     },
   });
@@ -26,9 +33,13 @@ export async function GET(request: NextRequest) {
   let sent = 0;
   let skipped = 0;
   let failed = 0;
+  let openDayNudges = 0;
+
+  const todayKey = currentShiftDayKey();
 
   for (const circle of circles) {
     // Keep shift windows healthy for every active circle
+    // (rotations get assigned shifts, meal trains get open days)
     try {
       await ensureShiftsForCircle(circle.id, 16);
     } catch (err) {
@@ -38,23 +49,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const reminderDays = circle.reminderDaysBefore.filter(
-      (d) => d === 7 || d === 2 || d === 1,
-    );
+    // 7 / 2 / 1 days before — trimmed to day-before-only for rotations that
+    // run 3+ days a week, where three emails per shift would be near-daily.
+    const reminderDays = effectiveReminderDays(circle);
 
     for (const daysBefore of reminderDays) {
-      const targetStart = new Date();
-      targetStart.setDate(targetStart.getDate() + daysBefore);
-      targetStart.setHours(0, 0, 0, 0);
-
-      const targetEnd = new Date(targetStart);
-      targetEnd.setHours(23, 59, 59, 999);
+      // Shifts are stored at 12:00 UTC on their calendar day, so match the
+      // whole UTC day of the target date.
+      const targetKey = addDaysToKey(todayKey, daysBefore);
 
       const shifts = await db.shift.findMany({
         where: {
           circleId: circle.id,
-          scheduledDate: { gte: targetStart, lte: targetEnd },
+          scheduledDate: {
+            gte: new Date(`${targetKey}T00:00:00.000Z`),
+            lte: new Date(`${targetKey}T23:59:59.999Z`),
+          },
           status: { in: ["SCHEDULED", "IN_PROGRESS"] },
+          // Unclaimed meal train days have nobody to remind
+          assignedUserId: { not: null },
         },
         select: { id: true },
       });
@@ -63,11 +76,21 @@ export async function GET(request: NextRequest) {
         shiftsEvaluated++;
         const result = await sendShiftReminder({
           shiftId: shift.id,
-          daysBefore: daysBefore as 7 | 2 | 1,
+          daysBefore,
         });
         if (result.status === "sent") sent++;
         else if (result.status === "skipped") skipped++;
         else failed++;
+      }
+    }
+
+    // Meal trains: tell the organizers when a day that's close is still open
+    if (circle.circleType === "MEAL_TRAIN") {
+      try {
+        const nudge = await sendOpenDayNudges(circle.id);
+        openDayNudges += nudge.sent;
+      } catch (err) {
+        console.error(`[cron] sendOpenDayNudges failed for ${circle.id}:`, err);
       }
     }
   }
@@ -78,6 +101,7 @@ export async function GET(request: NextRequest) {
     sent,
     skipped,
     failed,
+    openDayNudges,
     archive: archiveResult,
   });
 }

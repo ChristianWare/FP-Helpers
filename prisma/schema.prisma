@@ -34,6 +34,16 @@ enum CircleDurationType {
   FIXED
 }
 
+// What kind of circle this is.
+//   STANDARD   — helpers take turns automatically (the rotation), with the
+//                grocery list + prescription features.
+//   MEAL_TRAIN — every scheduled day is an open slot. Helpers pick the days
+//                that work for them and say what meal they're bringing.
+enum CircleType {
+  STANDARD
+  MEAL_TRAIN
+}
+
 enum RotationCadence {
   WEEKLY
   BIWEEKLY
@@ -112,6 +122,7 @@ enum ShiftEventType {
   COMPLETED
   FLAGGED
   NOTE_ADDED
+  RELEASED // meal train: a helper (or admin) gave a claimed day back
 }
 
 // =========================
@@ -238,6 +249,9 @@ model CareCircle {
   name   String // e.g. "Harold's Circle"
   status CircleStatus @default(ACTIVE)
 
+  // Standard rotation circle or meal train — chosen in step 1 of the wizard
+  circleType CircleType @default(STANDARD)
+
   // The recipient (elderly friend)
   recipientId String?
   recipient   User?   @relation("CircleRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
@@ -252,11 +266,34 @@ model CareCircle {
   emergencyPhone   String?
   internalNotes    String? @db.Text // admin-only
 
-  // Rotation settings
-  rotationCadence    RotationCadence @default(WEEKLY)
-  rotationDayOfWeek  Int             @default(6) // 0 = Sunday, 6 = Saturday
-  lookaheadWeeks     Int             @default(8)
-  typicalArrivalTime String? // "around 10am"
+  // Schedule settings
+  rotationCadence RotationCadence @default(WEEKLY)
+
+  // Days of the week visits happen on (0 = Sunday … 6 = Saturday).
+  //   [3]              → Wednesdays
+  //   [3, 6]           → Wednesdays and Saturdays
+  //   [0,1,2,3,4,5,6]  → every day
+  // An EMPTY array means a legacy row that hasn't been backfilled yet —
+  // the code falls back to rotationDayOfWeek (see getCircleDays()).
+  rotationDaysOfWeek Int[] @default([])
+
+  // DEPRECATED — superseded by rotationDaysOfWeek. Still written (as the
+  // first scheduled day) so older rows/scripts keep working. Safe to drop
+  // once scripts/backfill-rotation-days.ts has run in every environment.
+  rotationDayOfWeek Int @default(6) // 0 = Sunday, 6 = Saturday
+
+  // Fixed reference date for BIWEEKLY circles. "On" weeks are the ones with
+  // the same parity as this date's week, so the pattern can't drift no matter
+  // which day the generator happens to run.
+  scheduleAnchorDate DateTime?
+
+  lookaheadWeeks     Int     @default(8)
+  typicalArrivalTime String? // "around 10am" (meal trains: preferred drop-off time)
+
+  // Meal train details — shown to everyone deciding what to cook
+  mealHouseholdSize String? // "2 adults, 3 kids"
+  mealAllergies     String? @db.Text // allergies + foods to avoid
+  mealPreferences   String? @db.Text // favorites, dislikes, anything else
 
   // Duration — how long this circle is meant to run
   durationType CircleDurationType @default(INDEFINITE)
@@ -286,6 +323,7 @@ model CareCircle {
   @@index([status])
   @@index([recipientId])
   @@index([endDate])
+  @@index([circleType])
 }
 
 // =========================
@@ -407,6 +445,11 @@ model Shift {
   visitNote     String?        @db.Text
   wellnessNote  String?        @db.Text
   flagged       Boolean        @default(false) // set true if wellness concern
+
+  // Meal train — what the helper who claimed this day is bringing.
+  // (In a meal train an unclaimed day is simply a shift with no assignee.)
+  mealDescription String? // "Chicken enchiladas + rice"
+  mealNotes       String? @db.Text // "Contains dairy. Reheat at 350 for 20 min."
 
   // Relations
   groceryItems        GroceryItem[]

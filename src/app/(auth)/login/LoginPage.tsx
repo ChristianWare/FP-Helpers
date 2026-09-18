@@ -11,8 +11,15 @@ import { checkEmail } from "@/actions/auth/checkEmail";
 import { sendMagicLink } from "@/actions/auth/sendMagicLink";
 import { login } from "@/actions/auth/login";
 
-export default function LoginPage() {
+type Props = {
+  /** Where to go after signing in. Validated server-side; null → dashboard. */
+  nextPath: string | null;
+};
+
+export default function LoginPage({ nextPath }: Props) {
   const router = useRouter();
+  const destination = nextPath ?? "/dashboard";
+  const cameFromInvite = nextPath?.startsWith("/join/") ?? false;
   const { status } = useSession();
 
   const [email, setEmail] = useState("");
@@ -24,9 +31,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/dashboard");
+      router.replace(destination);
     }
-  }, [status, router]);
+  }, [status, router, destination]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +48,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push(destination);
     router.refresh();
   };
 
@@ -124,7 +131,9 @@ export default function LoginPage() {
         <div className={styles.cardTop}>
           <h1 className={styles.heading}>Welcome back</h1>
           <p className={styles.subheading}>
-            Sign in to Friendship Park Helpers
+            {cameFromInvite
+              ? "Sign in and we'll take you right back to your invitation"
+              : "Sign in to Friendship Park Helpers"}
           </p>
         </div>
 

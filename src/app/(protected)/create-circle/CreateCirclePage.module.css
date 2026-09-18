@@ -388,3 +388,37 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* City / State / ZIP row (the markup has always used .rowThree) */
+.rowThree {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 480px) {
+  .rowThree {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ——— Live "that's 7 meals…" line on the schedule step ——— */
+
+.scheduleSummary {
+  padding: 14px 16px;
+  background: #faf7ff;
+  border: 1px solid #ddd6fe;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #4c1d95;
+  line-height: 1.5;
+  margin: 0;
+  hyphens: none;
+}
+
+/* The global stylesheet uppercases every <span>; "(optional)" reads better plain */
+.optional {
+  text-transform: none;
+  font-family: var(--suisseReg);
+}

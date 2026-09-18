@@ -16,17 +16,10 @@ import { formatCircleDuration } from "@/lib/circles/formatDuration";
 import RecipientSection from "./RecipientSection";
 import ScheduleSection from "./ScheduleSection";
 import RotationEditor from "./RotationEditor";
-//
-
-const DAYS_OF_WEEK = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
+import MealCalendar, {
+  type MealSlot,
+} from "@/components/meals/MealCalendar/MealCalendar";
+import MealDetailsSection from "@/components/meals/MealDetailsSection/MealDetailsSection";
 
 type RotationShift = {
   id: string;
@@ -50,12 +43,16 @@ type Props = {
     addressState: string | null;
     addressZip: string | null;
     accessNotes: string | null;
-    rotationDayOfWeek: number;
+    circleType: "STANDARD" | "MEAL_TRAIN";
+    rotationDaysOfWeek: number[];
     rotationCadence: string;
     typicalArrivalTime: string | null;
     durationType: string;
     startDate: string | null;
     endDate: string | null;
+    mealHouseholdSize: string | null;
+    mealAllergies: string | null;
+    mealPreferences: string | null;
   };
   recipient: {
     id: string;
@@ -84,8 +81,16 @@ type Props = {
   currentUserRole: string | null;
   joinUrl: string | null;
   justCreated: boolean;
+  /** The recipient's email already had an account, so no password was set. */
+  recipientHadAccount: boolean;
+  /** Arrived here straight from the invite page. */
+  justJoined: boolean;
+  /** How many of the days they picked were taken before they submitted. */
+  takenCount: number;
   nextShiftByHelper: Record<string, string>;
   rotationShifts: RotationShift[];
+  /** Meal trains only — the full calendar of days. */
+  mealSlots: MealSlot[];
 };
 
 export default function CirclePage({
@@ -96,14 +101,29 @@ export default function CirclePage({
   currentUserRole,
   joinUrl,
   justCreated,
+  recipientHadAccount,
+  justJoined,
+  takenCount,
   nextShiftByHelper,
   rotationShifts,
+  mealSlots,
   myNextShift,
 }: Props) {
   const [copied, setCopied] = useState(false);
 
   const helpers = memberships.filter((m) => m.role !== "RECIPIENT");
   const isAdmin = currentUserRole === "ADMIN";
+  const isMealTrain = circle.circleType === "MEAL_TRAIN";
+  const canSignUp = currentUserRole === "ADMIN" || currentUserRole === "HELPER";
+
+  // Meal train: how many days each person has taken
+  const daysByHelper: Record<string, number> = {};
+  for (const slot of mealSlots) {
+    if (slot.assignedUser) {
+      daysByHelper[slot.assignedUser.id] =
+        (daysByHelper[slot.assignedUser.id] ?? 0) + 1;
+    }
+  }
 
   const helpersInRotation = memberships.filter(
     (m) => m.inRotation && m.role !== "RECIPIENT",
@@ -112,6 +132,7 @@ export default function CirclePage({
   const rotationIntervalLabel = formatRotationInterval(
     helpersInRotation,
     circle.rotationCadence as "WEEKLY" | "BIWEEKLY" | "CUSTOM",
+    circle.rotationDaysOfWeek.length,
   );
 
   const copyJoinLink = async () => {
@@ -120,6 +141,52 @@ export default function CirclePage({
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  // ——— Two blocks that are laid out differently per circle type ———
+
+  const nextShiftBanner = myNextShift ? (
+    <div className={styles.myShiftBanner}>
+      <p className={styles.myShiftLabel}>
+        {isMealTrain ? "Your next meal" : "Your next shift"}
+      </p>
+      <h2 className={styles.myShiftDate}>
+        {formatShiftFullDate(new Date(myNextShift.scheduledDate))}
+      </h2>
+      {circle.typicalArrivalTime && (
+        <p className={styles.myShiftTime}>
+          {isMealTrain ? "Drop off around" : "Arriving around"}{" "}
+          {circle.typicalArrivalTime}
+        </p>
+      )}
+      <Link
+        href={`/circles/${circle.id}/shifts/${myNextShift.id}`}
+        className={styles.myShiftCta}
+      >
+        {isMealTrain ? "Open your day →" : "Open shift details →"}
+      </Link>
+    </div>
+  ) : null;
+
+  const scheduleSection = (
+    <ScheduleSection
+      circleId={circle.id}
+      schedule={{
+        circleType: circle.circleType,
+        rotationDaysOfWeek: circle.rotationDaysOfWeek,
+        rotationCadence: circle.rotationCadence,
+        typicalArrivalTime: circle.typicalArrivalTime,
+        address: circle.address,
+        addressCity: circle.addressCity,
+        addressState: circle.addressState,
+        addressZip: circle.addressZip,
+        accessNotes: circle.accessNotes,
+        durationType: circle.durationType,
+        startDate: circle.startDate,
+        endDate: circle.endDate,
+      }}
+      isAdmin={isAdmin}
+    />
+  );
 
   return (
     <section className={styles.container}>
@@ -138,8 +205,10 @@ export default function CirclePage({
             <SectionHeading
               title={
                 recipient
-                  ? `Helping ${recipient.firstName} ${recipient.lastName}`
-                  : "Your care circle"
+                  ? `${isMealTrain ? "Meals for" : "Helping"} ${recipient.firstName} ${recipient.lastName}`
+                  : isMealTrain
+                    ? "Your meal train"
+                    : "Your care circle"
               }
               color='black'
               dotColor='purpleDot'
@@ -152,57 +221,99 @@ export default function CirclePage({
               <div className={styles.successBanner}>
                 <div className={styles.successIcon}>🎉</div>
                 <div>
-                  <h2 className={styles.successTitle}>Your circle is ready</h2>
+                  <h2 className={styles.successTitle}>
+                    {isMealTrain
+                      ? "Your meal train is ready"
+                      : "Your circle is ready"}
+                  </h2>
                   <p className={styles.successText}>
-                    We&apos;ve sent {recipient?.firstName} their sign-in details
-                    by email. Now invite your friends by sharing the link below.
+                    {recipientHadAccount
+                      ? `${recipient?.firstName} already had an account, so the password you typed wasn't used — we've emailed them to sign in the way they normally do.`
+                      : `We've sent ${recipient?.firstName} their sign-in details by email.`}{" "}
+                    {isMealTrain
+                      ? "Now share the link below — everyone who opens it can pick a day."
+                      : "Now invite your friends by sharing the link below."}
                   </p>
                 </div>
               </div>
             </>
           )}
 
-          {/* Your next shift banner + Schedule */}
-          {myNextShift && (
-            <section className={styles.helperList}>
-              <div className={styles.myShiftBanner}>
-                <p className={styles.myShiftLabel}>Your next shift</p>
-                <h2 className={styles.myShiftDate}>
-                  {formatShiftFullDate(new Date(myNextShift.scheduledDate))}
-                </h2>
-                {circle.typicalArrivalTime && (
-                  <p className={styles.myShiftTime}>
-                    Arriving around {circle.typicalArrivalTime}
-                  </p>
-                )}
-                <Link
-                  href={`/circles/${circle.id}/shifts/${myNextShift.id}`}
-                  className={styles.myShiftCta}
-                >
-                  Open shift details →
-                </Link>
+          {justJoined && !justCreated && (
+            <div className={styles.successBanner}>
+              <div className={styles.successIcon}>🎉</div>
+              <div>
+                <h2 className={styles.successTitle}>You&apos;re in</h2>
+                <p className={styles.successText}>
+                  {isMealTrain
+                    ? myNextShift
+                      ? "Thank you. Your days are on the calendar below, and the details are in your email."
+                      : "Thank you for joining. Pick a day below whenever you're ready."
+                    : "Thank you for joining. You've been added to the rotation."}
+                </p>
               </div>
+            </div>
+          )}
 
-              {/* Schedule */}
-              <ScheduleSection
+          {takenCount > 0 && (
+            <div className={styles.noticeBanner} role='status'>
+              <p className={styles.noticeText}>
+                {takenCount === 1
+                  ? "One of the days you picked was taken by someone else just before you signed up."
+                  : `${takenCount} of the days you picked were taken by someone else just before you signed up.`}{" "}
+                Here&apos;s what&apos;s still open.
+              </p>
+            </div>
+          )}
+
+          {/* Standard circle WITH an upcoming shift: banner and schedule sit
+              side by side, exactly as before. */}
+          {!isMealTrain && nextShiftBanner && (
+            <section className={styles.helperList}>
+              {nextShiftBanner}
+              {scheduleSection}
+            </section>
+          )}
+
+          {/* Meal train: full-width banner, then the calendar — it's why
+              people are here. */}
+          {isMealTrain && nextShiftBanner}
+
+          {/* Meal train: the calendar comes first — it's why people are here */}
+          {isMealTrain && (
+            <section className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>Meal calendar</h2>
+              </div>
+              <MealCalendar
                 circleId={circle.id}
-                schedule={{
-                  rotationDayOfWeek: circle.rotationDayOfWeek,
-                  rotationCadence: circle.rotationCadence,
-                  typicalArrivalTime: circle.typicalArrivalTime,
-                  address: circle.address,
-                  addressCity: circle.addressCity,
-                  addressState: circle.addressState,
-                  addressZip: circle.addressZip,
-                  accessNotes: circle.accessNotes,
-                  durationType: circle.durationType,
-                  startDate: circle.startDate,
-                  endDate: circle.endDate,
-                }}
+                currentUserId={currentUserId}
                 isAdmin={isAdmin}
+                canSignUp={canSignUp}
+                recipientFirstName={recipient?.firstName ?? null}
+                slots={mealSlots}
               />
             </section>
           )}
+
+          {isMealTrain && (
+            <MealDetailsSection
+              circleId={circle.id}
+              details={{
+                mealHouseholdSize: circle.mealHouseholdSize,
+                mealAllergies: circle.mealAllergies,
+                mealPreferences: circle.mealPreferences,
+              }}
+              canEdit={isAdmin}
+              audience='helpers'
+              recipientFirstName={recipient?.firstName ?? null}
+            />
+          )}
+
+          {/* Everyone else still gets the schedule. (It used to exist ONLY
+              inside the block above, so an organizer with no upcoming shift
+              couldn't see or edit it.) */}
+          {(isMealTrain || !nextShiftBanner) && scheduleSection}
 
           {/* Recipient */}
           {recipient && (
@@ -214,7 +325,7 @@ export default function CirclePage({
           )}
 
           {/* The rotation — current cycle only, with completion state per row */}
-          {rotationShifts.length > 0 && (
+          {!isMealTrain && rotationShifts.length > 0 && (
             <section className={styles.section}>
               <div className={styles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>The rotation</h2>
@@ -245,8 +356,9 @@ export default function CirclePage({
                 <h2 className={styles.sectionTitle}>Invite helpers</h2>
               </div>
               <p className={styles.listContext}>
-                Share this link in your group chat. Anyone who taps it can sign
-                up and join the rotation.
+                {isMealTrain
+                  ? "Share this link in your group chat. Anyone who taps it sees the open days and can sign up for the ones that work for them."
+                  : "Share this link in your group chat. Anyone who taps it can sign up and join the rotation."}
               </p>
               <div className={styles.shareBox}>
                 <code className={styles.shareUrl}>{joinUrl}</code>
@@ -290,9 +402,15 @@ export default function CirclePage({
                       </p>
                       <div className={styles.helperBadges}>
                         <span className={styles.roleBadge}>{m.role}</span>
-                        {m.inRotation && (
+                        {!isMealTrain && m.inRotation && (
                           <span className={styles.rotationBadge}>
                             In rotation
+                          </span>
+                        )}
+                        {isMealTrain && daysByHelper[m.user.id] > 0 && (
+                          <span className={styles.rotationBadge}>
+                            {daysByHelper[m.user.id]}{" "}
+                            {daysByHelper[m.user.id] === 1 ? "day" : "days"}
                           </span>
                         )}
                       </div>
@@ -304,7 +422,7 @@ export default function CirclePage({
                       </a>
                       <p className={styles.helperEmail}>{m.user.email}</p>
 
-                      {m.inRotation && (
+                      {!isMealTrain && m.inRotation && (
                         <div className={styles.helperRotation}>
                           <p className={styles.helperRotationLabel}>
                             {rotationIntervalLabel}

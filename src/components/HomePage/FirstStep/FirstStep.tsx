@@ -5,7 +5,7 @@ import Link from "next/link";
 const data = [
   {
     id: 14,
-    title: "Organize a circle",
+    title: "Organize a circle or Meal Train",
     desc: "Create a circle and invite your friends to join. You can also join existing circles.",
     href: "/create-circle",
   },

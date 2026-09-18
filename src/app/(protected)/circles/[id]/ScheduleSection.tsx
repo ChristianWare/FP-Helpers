@@ -14,16 +14,14 @@ import {
   UpdateCircleScheduleSchemaType,
 } from "@/schemas/UpdateCircleScheduleSchema";
 import { updateCircleSchedule } from "@/actions/circles/updateCircleSchedule";
-
-const DAYS_OF_WEEK = [
-  { value: 0, label: "Sunday" },
-  { value: 1, label: "Monday" },
-  { value: 2, label: "Tuesday" },
-  { value: 3, label: "Wednesday" },
-  { value: 4, label: "Thursday" },
-  { value: 5, label: "Friday" },
-  { value: 6, label: "Saturday" },
-];
+import SchedulePicker from "@/components/circles/SchedulePicker/SchedulePicker";
+import {
+  describeCadence,
+  describeDays,
+  frequencyForDays,
+  localDateKey,
+  normalizeDays,
+} from "@/lib/shifts/scheduleDates";
 
 const ARRIVAL_TIMES = (() => {
   const times: { value: string; label: string }[] = [];
@@ -49,7 +47,8 @@ function isoToDateInput(iso: string | null): string {
 }
 
 type Schedule = {
-  rotationDayOfWeek: number;
+  circleType: "STANDARD" | "MEAL_TRAIN";
+  rotationDaysOfWeek: number[];
   rotationCadence: string;
   typicalArrivalTime: string | null;
   address: string | null;
@@ -68,6 +67,30 @@ type Props = {
   isAdmin: boolean;
 };
 
+/** Circle → form values. One builder so defaults and resets can't disagree. */
+function toFormValues(schedule: Schedule): UpdateCircleScheduleSchemaType {
+  const days = normalizeDays(schedule.rotationDaysOfWeek);
+  const frequency = frequencyForDays(days);
+  return {
+    scheduleFrequency: frequency,
+    rotationDayOfWeek: days[0] ?? 6,
+    // Only meaningful for "several days"; kept empty otherwise so switching
+    // to it starts from a clean slate.
+    rotationDaysOfWeek: frequency === "MULTIPLE_DAYS" ? days : [],
+    rotationCadence:
+      schedule.rotationCadence === "BIWEEKLY" ? "BIWEEKLY" : "WEEKLY",
+    typicalArrivalTime: schedule.typicalArrivalTime ?? "",
+    address: schedule.address ?? "",
+    addressCity: schedule.addressCity ?? "",
+    addressState: schedule.addressState ?? "",
+    addressZip: schedule.addressZip ?? "",
+    accessNotes: schedule.accessNotes ?? "",
+    durationType: schedule.durationType === "FIXED" ? "FIXED" : "INDEFINITE",
+    startDate: isoToDateInput(schedule.startDate),
+    endDate: isoToDateInput(schedule.endDate),
+  };
+}
+
 export default function ScheduleSection({
   circleId,
   schedule,
@@ -85,45 +108,26 @@ export default function ScheduleSection({
     formState: { errors, isDirty },
   } = useForm<UpdateCircleScheduleSchemaType>({
     resolver: zodResolver(UpdateCircleScheduleSchema),
-    defaultValues: {
-      rotationDayOfWeek: schedule.rotationDayOfWeek,
-      rotationCadence:
-        (schedule.rotationCadence as "WEEKLY" | "BIWEEKLY") ?? "WEEKLY",
-      typicalArrivalTime: schedule.typicalArrivalTime ?? "",
-      address: schedule.address ?? "",
-      addressCity: schedule.addressCity ?? "",
-      addressState: schedule.addressState ?? "",
-      addressZip: schedule.addressZip ?? "",
-      accessNotes: schedule.accessNotes ?? "",
-      durationType:
-        (schedule.durationType as "INDEFINITE" | "FIXED") ?? "INDEFINITE",
-      startDate: isoToDateInput(schedule.startDate),
-      endDate: isoToDateInput(schedule.endDate),
-    },
+    defaultValues: toFormValues(schedule),
     mode: "onTouched",
   });
 
   const watchedDuration = watch("durationType");
+  const watchedFrequency = watch("scheduleFrequency");
+  const watchedSingleDay = watch("rotationDayOfWeek");
+  const watchedMultipleDays = watch("rotationDaysOfWeek");
+  const watchedCadence = watch("rotationCadence");
+  const watchedStart = watch("startDate");
+
+  const isMealTrain = schedule.circleType === "MEAL_TRAIN";
+
+  const daysKey = normalizeDays(schedule.rotationDaysOfWeek).join(",");
 
   useEffect(() => {
-    reset({
-      rotationDayOfWeek: schedule.rotationDayOfWeek,
-      rotationCadence:
-        (schedule.rotationCadence as "WEEKLY" | "BIWEEKLY") ?? "WEEKLY",
-      typicalArrivalTime: schedule.typicalArrivalTime ?? "",
-      address: schedule.address ?? "",
-      addressCity: schedule.addressCity ?? "",
-      addressState: schedule.addressState ?? "",
-      addressZip: schedule.addressZip ?? "",
-      accessNotes: schedule.accessNotes ?? "",
-      durationType:
-        (schedule.durationType as "INDEFINITE" | "FIXED") ?? "INDEFINITE",
-      startDate: isoToDateInput(schedule.startDate),
-      endDate: isoToDateInput(schedule.endDate),
-    });
+    reset(toFormValues(schedule));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    schedule.rotationDayOfWeek,
+    daysKey,
     schedule.rotationCadence,
     schedule.typicalArrivalTime,
     schedule.address,
@@ -142,6 +146,8 @@ export default function ScheduleSection({
 
     if (result.success) {
       toast.success("Schedule updated");
+      // e.g. "2 days people signed up for fall outside the new schedule…"
+      if (result.notice) toast(result.notice, { duration: 9000, icon: "ℹ️" });
       setEditing(false);
     } else {
       toast.error(result.error || "Failed to update");
@@ -155,13 +161,16 @@ export default function ScheduleSection({
     setEditing(false);
   };
 
-  const todayIso = new Date().toISOString().split("T")[0];
+  const todayIso = localDateKey();
 
   // ——— Display formatting ———
 
-  const dayLabel = DAYS_OF_WEEK[schedule.rotationDayOfWeek]?.label ?? "Not set";
-  const cadenceLabel =
-    schedule.rotationCadence === "BIWEEKLY" ? "Every other week" : "Every week";
+  const cadence =
+    schedule.rotationCadence === "BIWEEKLY" ? "BIWEEKLY" : "WEEKLY";
+  const dayLabel = describeDays(schedule.rotationDaysOfWeek);
+  const cadenceLabel = describeCadence(cadence);
+  const isDailySchedule =
+    normalizeDays(schedule.rotationDaysOfWeek).length === 7;
 
   const { line1: addrLine1, line2: addrLine2 } = formatCircleAddress({
     address: schedule.address,
@@ -178,6 +187,7 @@ export default function ScheduleSection({
       month: "long",
       day: "numeric",
       year: "numeric",
+      timeZone: "UTC", // the stored date IS the calendar day — don't shift it
     });
   })();
 
@@ -198,54 +208,53 @@ export default function ScheduleSection({
 
       {editing ? (
         <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-          {/* Day + cadence */}
-          <div className={styles.row}>
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor='editDay'>
-                Day of the week
-              </label>
-              <select
-                id='editDay'
-                className={`${styles.input} ${errors.rotationDayOfWeek ? styles.inputError : ""}`}
-                {...register("rotationDayOfWeek", { valueAsNumber: true })}
-              >
-                {DAYS_OF_WEEK.map((d) => (
-                  <option key={d.value} value={d.value}>
-                    {d.label}
-                  </option>
-                ))}
-              </select>
-              {errors.rotationDayOfWeek && (
-                <span className={styles.fieldError}>
-                  {errors.rotationDayOfWeek.message}
-                </span>
-              )}
-            </div>
+          {/* Days + cadence */}
+          <SchedulePicker
+            idPrefix='edit'
+            labelStyle='caps'
+            frequency={watchedFrequency}
+            singleDay={watchedSingleDay}
+            multipleDays={watchedMultipleDays ?? []}
+            cadence={watchedCadence}
+            onFrequencyChange={(value) => {
+              setValue("scheduleFrequency", value, {
+                shouldDirty: true,
+                shouldValidate: true,
+              });
+              if (value === "DAILY") {
+                setValue("rotationCadence", "WEEKLY", { shouldDirty: true });
+              }
+            }}
+            onSingleDayChange={(value) =>
+              setValue("rotationDayOfWeek", value, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
+            onMultipleDaysChange={(value) =>
+              setValue("rotationDaysOfWeek", value, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
+            onCadenceChange={(value) =>
+              setValue("rotationCadence", value, { shouldDirty: true })
+            }
+            daysError={errors.rotationDaysOfWeek?.message}
+            scheduleError={errors.scheduleFrequency?.message}
+          />
 
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor='editCadence'>
-                How often
-              </label>
-              <select
-                id='editCadence'
-                className={`${styles.input} ${errors.rotationCadence ? styles.inputError : ""}`}
-                {...register("rotationCadence")}
-              >
-                <option value='WEEKLY'>Every week</option>
-                <option value='BIWEEKLY'>Every other week</option>
-              </select>
-              {errors.rotationCadence && (
-                <span className={styles.fieldError}>
-                  {errors.rotationCadence.message}
-                </span>
-              )}
-            </div>
-          </div>
+          {isMealTrain && (
+            <p className={styles.editHint}>
+              Changing the days only adds or removes <strong>open</strong> days.
+              Anything someone has already signed up for stays put.
+            </p>
+          )}
 
           {/* Arrival time */}
           <div className={styles.field}>
             <label className={styles.label} htmlFor='editArrival'>
-              Typical arrival time
+              {isMealTrain ? "Preferred drop-off time" : "Typical arrival time"}
             </label>
             <select
               id='editArrival'
@@ -423,7 +432,6 @@ export default function ScheduleSection({
                 <input
                   id='editStart'
                   type='date'
-                  min={todayIso}
                   className={`${styles.input} ${errors.startDate ? styles.inputError : ""}`}
                   {...register("startDate")}
                 />
@@ -440,7 +448,7 @@ export default function ScheduleSection({
                 <input
                   id='editEnd'
                   type='date'
-                  min={todayIso}
+                  min={watchedStart || todayIso}
                   className={`${styles.input} ${errors.endDate ? styles.inputError : ""}`}
                   {...register("endDate")}
                 />
@@ -474,18 +482,24 @@ export default function ScheduleSection({
       ) : (
         <div className={styles.infoCard}>
           <div className={styles.infoRow}>
-            <span className={styles.fieldLabel}>Day</span>
+            <span className={styles.fieldLabel}>
+              {isMealTrain ? "Meal days" : "Days"}
+            </span>
             <p className={styles.infoValue}>{dayLabel}</p>
           </div>
 
-          <div className={styles.infoRow}>
-            <span className={styles.fieldLabel}>Frequency</span>
-            <p className={styles.infoValue}>{cadenceLabel}</p>
-          </div>
+          {!isDailySchedule && (
+            <div className={styles.infoRow}>
+              <span className={styles.fieldLabel}>Frequency</span>
+              <p className={styles.infoValue}>{cadenceLabel}</p>
+            </div>
+          )}
 
           {schedule.typicalArrivalTime && (
             <div className={styles.infoRow}>
-              <span className={styles.fieldLabel}>Arrival time</span>
+              <span className={styles.fieldLabel}>
+                {isMealTrain ? "Drop-off time" : "Arrival time"}
+              </span>
               <p className={styles.infoValue}>{schedule.typicalArrivalTime}</p>
             </div>
           )}

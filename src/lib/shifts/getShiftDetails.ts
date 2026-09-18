@@ -17,11 +17,24 @@ export async function getShiftDetails(shiftId: string) {
         select: {
           id: true,
           name: true,
+          circleType: true,
           address: true,
+          addressCity: true,
+          addressState: true,
+          addressZip: true,
           accessNotes: true,
           typicalArrivalTime: true,
           emergencyContact: true,
           emergencyPhone: true,
+          // Reminder cadence (shown on the shift page)
+          rotationCadence: true,
+          rotationDaysOfWeek: true,
+          rotationDayOfWeek: true,
+          reminderDaysBefore: true,
+          // Meal train details
+          mealHouseholdSize: true,
+          mealAllergies: true,
+          mealPreferences: true,
           recipient: {
             select: {
               id: true,

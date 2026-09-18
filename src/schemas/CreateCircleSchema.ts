@@ -1,9 +1,13 @@
 // schemas/CreateCircleSchema.ts
 import { z } from "zod";
 import { US_STATE_VALUES } from "@/lib/states";
+import { refineSchedule, scheduleFieldShape } from "@/schemas/scheduleFields";
 
 export const CreateCircleSchema = z
   .object({
+    // Step 1 — what kind of circle
+    circleType: z.enum(["STANDARD", "MEAL_TRAIN"]),
+
     circleName: z
       .string()
       .trim()
@@ -55,30 +59,26 @@ export const CreateCircleSchema = z
       ),
     accessNotes: z.string().trim().max(500).optional().or(z.literal("")),
 
-    // Schedule
-    rotationDayOfWeek: z.number().int().min(0).max(6),
-    rotationCadence: z.enum(["WEEKLY", "BIWEEKLY"]),
-    typicalArrivalTime: z.string().optional().or(z.literal("")),
+    // Duration + schedule (shared with the schedule editor)
+    ...scheduleFieldShape,
 
-    // Duration
-    durationType: z.enum(["INDEFINITE", "FIXED"]),
-    startDate: z.string().optional().or(z.literal("")),
-    endDate: z.string().optional().or(z.literal("")),
-
+    // Final step — standard circles
     organizerInRotation: z.boolean(),
+
+    // Final step — meal trains (all optional)
+    mealHouseholdSize: z
+      .string()
+      .trim()
+      .max(80, "Keep this short — e.g. “2 adults, 3 kids”")
+      .optional()
+      .or(z.literal("")),
+    mealAllergies: z.string().trim().max(500).optional().or(z.literal("")),
+    mealPreferences: z.string().trim().max(500).optional().or(z.literal("")),
   })
   .refine((data) => data.recipientPassword === data.recipientConfirmPassword, {
     message: "Passwords don't match",
     path: ["recipientConfirmPassword"],
   })
-  .refine(
-    (data) =>
-      data.durationType === "INDEFINITE" ||
-      (data.startDate && data.endDate && data.endDate > data.startDate),
-    {
-      message: "End date must be after start date",
-      path: ["endDate"],
-    },
-  );
+  .superRefine(refineSchedule);
 
 export type CreateCircleSchemaType = z.infer<typeof CreateCircleSchema>;

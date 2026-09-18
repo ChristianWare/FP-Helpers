@@ -101,3 +101,277 @@
     margin-top: 5rem;
   }
 }
+
+/* ─────────────────────────────────────────────
+   Meal train sign-up
+   ───────────────────────────────────────────── */
+
+.cardWide {
+  max-width: 560px;
+}
+
+/* Who you're cooking for */
+
+.infoBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  background: #fafafa;
+  border: 1px solid var(--gray);
+  border-radius: 12px;
+}
+
+.infoLine {
+  font-size: 15px;
+  color: #333;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-line;
+  hyphens: none;
+}
+
+.allergyRow {
+  padding: 12px 14px;
+  background: #fef9c3;
+  border: 1px solid #fde047;
+  border-radius: 8px;
+}
+
+.allergyLabel {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #854d0e;
+  margin: 0 0 2px;
+}
+
+.allergyText {
+  font-size: 15px;
+  font-weight: 600;
+  color: #713f12;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-line;
+  hyphens: none;
+}
+
+/* The calendar */
+
+.calendar {
+  margin-bottom: 28px;
+}
+
+.calendarHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.calendarTitle,
+.accountHeading {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: var(--purple);
+  margin: 0;
+}
+
+.accountHeading {
+  margin-bottom: 16px;
+}
+
+.calendarCount {
+  font-size: 14px;
+  font-weight: 600;
+  color: #888;
+  margin: 0;
+}
+
+.calendarEmpty {
+  font-size: 15px;
+  color: #666;
+  line-height: 1.6;
+  margin: 0 0 12px;
+  hyphens: none;
+}
+
+.dayList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px;
+}
+
+/* Only very long meal trains (a month+ of days) scroll inside the card —
+   a scrolling box inside a scrolling page is awkward on phones. */
+.dayListLong {
+  max-height: 560px;
+  overflow-y: auto;
+}
+
+.day {
+  border: 1px solid var(--gray);
+  border-radius: 10px;
+  background: #fff;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.day:hover:not(.dayTaken) {
+  border-color: var(--purple);
+}
+
+.dayPicked {
+  border: 2px solid var(--purple);
+  background: #faf7ff;
+}
+
+.dayTaken {
+  background: #fafafa;
+}
+
+.dayMain {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+}
+
+.dayTaken .dayMain {
+  cursor: default;
+}
+
+.dayCheckbox {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--purple);
+  cursor: pointer;
+}
+
+.dayCheckbox:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.dayCheckbox:focus-visible {
+  outline: 3px solid rgba(95, 70, 223, 0.35);
+  outline-offset: 2px;
+}
+
+.dayText {
+  min-width: 0;
+}
+
+.dayDate {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.dayTaken .dayDate {
+  color: #888;
+  font-weight: 600;
+}
+
+.dayStatus {
+  font-size: 14px;
+  color: var(--purple);
+  font-weight: 600;
+  margin: 2px 0 0;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  hyphens: none;
+}
+
+.dayTaken .dayStatus {
+  color: #888;
+  font-weight: 500;
+}
+
+.mealInput {
+  display: block;
+  width: calc(100% - 28px);
+  margin: 0 14px 12px;
+  padding: 11px 12px;
+  font-size: 15px;
+  font-family: inherit;
+  color: #111;
+  background: #fff;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+}
+
+.mealInput:focus {
+  outline: none;
+  border-color: var(--purple);
+}
+
+/* Signed-in visitor */
+
+.viewerBox {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: center;
+}
+
+.viewerText {
+  font-size: 15px;
+  color: #555;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.primaryBtn,
+.primaryLink {
+  display: block;
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--tan);
+  background: var(--purple);
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.primaryBtn:hover:not(:disabled),
+.primaryLink:hover {
+  opacity: 0.9;
+}
+
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.primaryBtn:focus-visible,
+.primaryLink:focus-visible {
+  outline: 3px solid rgba(95, 70, 223, 0.35);
+  outline-offset: 2px;
+}
+
+.errorBanner {
+  padding: 12px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: left;
+}

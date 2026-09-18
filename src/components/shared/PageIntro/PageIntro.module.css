@@ -21,6 +21,7 @@
 .heading {
   color: var(--tan);
   backface-visibility: hidden;
+  line-height: 130%;
 }
 
 .headingii {
@@ -36,10 +37,10 @@
 .copy {
   color: var(--white);
   font-size: 2rem;
-  /* width: 65%; */
+  max-width: 700px;
   font-family: var(--VisbyCF);
   opacity: 0.7;
-  letter-spacing: -0.1px;
+  letter-spacing: 0.1px;
 }
 
 .rightContent {

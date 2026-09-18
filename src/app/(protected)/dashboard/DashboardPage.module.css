@@ -503,3 +503,31 @@
     color: var(--tan);
   } */
 }
+
+/* ——— Circle type: "Meal train" / "Standard circle" ———
+   Sits above the circle name. The negative margin pulls it toward the name
+   so the two read as one unit inside the card's 16px column gap. */
+
+.typeBadge {
+  align-self: flex-start;
+  margin-bottom: -8px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.typeBadgeMealTrain {
+  background: var(--purple);
+  color: var(--tan);
+}
+
+.typeBadgeStandard {
+  background: transparent;
+  border-color: var(--gray3);
+  color: #555;
+}

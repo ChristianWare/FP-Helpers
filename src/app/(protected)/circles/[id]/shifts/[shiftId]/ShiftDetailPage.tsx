@@ -133,6 +133,9 @@ type Props = {
   groceryItems: GroceryItem[];
   prescriptions: Prescription[];
   notifications: NotificationEntry[];
+  /** "7 days, 2 days, and 1 day" — circles that run 3+ days a week only get "1 day". */
+  reminderSummary: string;
+  reminderDays: (7 | 2 | 1)[];
   otherHelperCount: number;
   openSwapRequest: OpenSwapRequest | null;
 };
@@ -149,6 +152,8 @@ export default function ShiftDetailPage({
   groceryItems,
   prescriptions,
   notifications,
+  reminderSummary,
+  reminderDays,
   otherHelperCount,
   openSwapRequest,
 }: Props) {
@@ -588,8 +593,9 @@ export default function ShiftDetailPage({
 
               {notifications.length === 0 ? (
                 <p className={styles.emptyText}>
-                  No reminders sent yet. You&apos;ll get emails 7 days, 2 days,
-                  and 1 day before your shift.
+                  No reminders sent yet. You&apos;ll get{" "}
+                  {reminderDays.length === 1 ? "an email" : "emails"}{" "}
+                  {reminderSummary} before your shift.
                 </p>
               ) : (
                 <div className={styles.notificationList}>
@@ -626,30 +632,17 @@ export default function ShiftDetailPage({
                     Want to see what the email looks like?
                   </p>
                   <div className={styles.testReminderButtons}>
-                    <button
-                      type='button'
-                      className={styles.testReminderBtn}
-                      onClick={() => handleSendTestReminder(7)}
-                      disabled={sendingTest}
-                    >
-                      7-day version
-                    </button>
-                    <button
-                      type='button'
-                      className={styles.testReminderBtn}
-                      onClick={() => handleSendTestReminder(2)}
-                      disabled={sendingTest}
-                    >
-                      2-day version
-                    </button>
-                    <button
-                      type='button'
-                      className={styles.testReminderBtn}
-                      onClick={() => handleSendTestReminder(1)}
-                      disabled={sendingTest}
-                    >
-                      1-day version
-                    </button>
+                    {reminderDays.map((days) => (
+                      <button
+                        key={days}
+                        type='button'
+                        className={styles.testReminderBtn}
+                        onClick={() => handleSendTestReminder(days)}
+                        disabled={sendingTest}
+                      >
+                        {days}-day version
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}

@@ -31,14 +31,15 @@
   border-radius: 15px;
 }
 
+/* 3 columns now, so its divider lines up with the step columns below */
 .middle {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   border-bottom: 1px solid var(--black);
 }
 
 .heading {
-  grid-column: span 3;
+  grid-column: span 2;
   color: var(--purple);
   padding: 3rem;
   font-size: 2rem;
@@ -60,9 +61,11 @@
   height: 100%;
 }
 
+/* ——— Steps: 3 across × 2 rows ——— */
+
 .bottom {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .card {
@@ -74,11 +77,18 @@
   padding: 2rem;
   position: relative;
   border-right: 1px dashed var(--black);
+  border-bottom: 1px dashed var(--black);
   /* background-color: var(--tan); */
 }
 
-.card:nth-child(4) {
+/* Last card in each row of 3: no right divider */
+.card:nth-child(3n) {
   border-right: none;
+}
+
+/* Bottom row of 3: no bottom divider */
+.card:nth-last-child(-n + 3) {
+  border-bottom: none;
 }
 
 .indexContainer {
@@ -135,6 +145,8 @@
     display: none;
   }
 
+  /* ——— Steps: 2 across × 3 rows ——— */
+
   .bottom {
     grid-template-columns: repeat(2, 1fr);
     border-bottom: none;
@@ -142,15 +154,23 @@
 
   .card {
     padding: 3rem;
+  }
+
+  /* Undo the 3-across rules… */
+  .card:nth-child(3n) {
+    border-right: 1px dashed var(--black);
+  }
+
+  .card:nth-last-child(-n + 3) {
     border-bottom: 1px dashed var(--black);
   }
 
-  .card:nth-child(2) {
+  /* …then apply the 2-across ones (order matters) */
+  .card:nth-child(2n) {
     border-right: none;
   }
 
-  .card:nth-child(3),
-  .card:nth-child(4) {
+  .card:nth-last-child(-n + 2) {
     border-bottom: none;
   }
 }
@@ -162,6 +182,8 @@
 }
 
 @media screen and (max-width: 568px) {
+  /* ——— Steps: 1 across ——— */
+
   .bottom {
     grid-template-columns: repeat(1, 1fr);
   }
@@ -169,14 +191,22 @@
   .card {
     align-items: center;
     justify-content: center;
-    border-right: none;
     gap: 5rem;
     padding-top: 5rem;
     padding-bottom: 5rem;
   }
 
-  .card:nth-child(3) {
+  /* No side dividers at all; a divider under every card except the last */
+  .card:nth-child(n) {
+    border-right: none;
+  }
+
+  .card:nth-last-child(-n + 2) {
     border-bottom: 1px dashed var(--black);
+  }
+
+  .card:last-child {
+    border-bottom: none;
   }
 
   .desc {

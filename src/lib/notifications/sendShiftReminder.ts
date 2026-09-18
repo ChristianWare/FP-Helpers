@@ -4,7 +4,12 @@
 import { db } from "@/lib/db";
 import { Resend } from "resend";
 import { buildShiftReminderEmail } from "@/lib/emails/shiftReminder";
+import { buildMealReminderEmail } from "@/lib/emails/mealTrain";
 import { formatShiftFullDate } from "@/lib/shifts/formatShift";
+import {
+  buildDropoff,
+  buildHousehold,
+} from "@/lib/notifications/mealTrainEmails";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -150,28 +155,48 @@ export async function sendShiftReminder({
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shift.circle.address)}`
     : null;
 
-  const { subject, html, text } = buildShiftReminderEmail({
-    helperFirstName: shift.assignedUser.firstName,
-    recipientFirstName: shift.circle.recipient?.firstName ?? "your friend",
-    recipientLastName: shift.circle.recipient?.lastName ?? "",
-    circleName: shift.circle.name,
-    daysBefore,
-    shiftDateFull: formatShiftFullDate(shift.scheduledDate),
-    shiftDateShort: shortDatePhrase(daysBefore, shift.scheduledDate),
-    typicalArrivalTime: shift.circle.typicalArrivalTime,
-    address: shift.circle.address,
-    accessNotes: shift.circle.accessNotes,
-    groceryItems: shift.groceryItems,
-    prescriptions: shift.circle.prescriptions.map((p) => ({
-      medicationName: p.medicationName,
-      pharmacyName: p.defaultPharmacy?.name ?? null,
-      needsPickupThisWeek: p.needsPickupThisWeek,
-    })),
-    emergencyContact: shift.circle.emergencyContact,
-    emergencyPhone: shift.circle.emergencyPhone,
-    shiftUrl,
-    mapsUrl,
-  });
+  // Meal trains get their own reminder: the meal they signed up to bring,
+  // who they're cooking for, and where to drop it — no grocery list.
+  const isMealTrain = shift.circle.circleType === "MEAL_TRAIN";
+
+  const { subject, html, text } = isMealTrain
+    ? buildMealReminderEmail({
+        helperFirstName: shift.assignedUser.firstName,
+        recipientFirstName: shift.circle.recipient?.firstName ?? "your friend",
+        circleName: shift.circle.name,
+        daysBefore,
+        shiftDateFull: formatShiftFullDate(shift.scheduledDate),
+        shiftDateShort: shortDatePhrase(daysBefore, shift.scheduledDate),
+        mealDescription: shift.mealDescription,
+        mealNotes: shift.mealNotes,
+        household: buildHousehold(shift.circle),
+        dropoff: buildDropoff(shift.circle),
+        emergencyContact: shift.circle.emergencyContact,
+        emergencyPhone: shift.circle.emergencyPhone,
+        shiftUrl,
+      })
+    : buildShiftReminderEmail({
+        helperFirstName: shift.assignedUser.firstName,
+        recipientFirstName: shift.circle.recipient?.firstName ?? "your friend",
+        recipientLastName: shift.circle.recipient?.lastName ?? "",
+        circleName: shift.circle.name,
+        daysBefore,
+        shiftDateFull: formatShiftFullDate(shift.scheduledDate),
+        shiftDateShort: shortDatePhrase(daysBefore, shift.scheduledDate),
+        typicalArrivalTime: shift.circle.typicalArrivalTime,
+        address: shift.circle.address,
+        accessNotes: shift.circle.accessNotes,
+        groceryItems: shift.groceryItems,
+        prescriptions: shift.circle.prescriptions.map((p) => ({
+          medicationName: p.medicationName,
+          pharmacyName: p.defaultPharmacy?.name ?? null,
+          needsPickupThisWeek: p.needsPickupThisWeek,
+        })),
+        emergencyContact: shift.circle.emergencyContact,
+        emergencyPhone: shift.circle.emergencyPhone,
+        shiftUrl,
+        mapsUrl,
+      });
 
   // 5. Create a PENDING log row first — if send fails, we still have a record
   const logRow = await db.notificationLog.create({

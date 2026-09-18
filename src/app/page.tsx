@@ -9,9 +9,9 @@ export default function Home() {
     <main>
       <PageIntro
         title={"Welcome to"}
-        title2='Friendship Park helpers'
+        title2='Friendship Park Helpers'
         sectionHeading='Friendship Park congregation'
-        copy='A simple way to coordinate grocery runs, prescription pickups, and weekly visits — so no one has to do it alone, and no one gets forgotten.'
+        copy='A simple way to coordinate grocery runs, prescription pickups, and meal trains — once a week, a few days a week, or every day — so no one has to do it alone, and no one gets forgotten.'
       />
       <HowItWorks />
       <PostHero />

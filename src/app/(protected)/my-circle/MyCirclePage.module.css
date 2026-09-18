@@ -750,3 +750,18 @@ select.inputMedium {
     grid-template-columns: 1fr;
   }
 }
+
+/* ——— Back to the dashboard (recipients who also help in other circles) ——— */
+
+.dashboardLink {
+  display: inline-block;
+  color: var(--purple);
+  font-size: 14px;
+  text-decoration: none;
+  margin-bottom: 12px;
+  letter-spacing: normal;
+}
+
+.dashboardLink:hover {
+  color: #111;
+}

@@ -5,15 +5,11 @@
 import styles from "./MyCirclePage.module.css";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { signOut } from "next-auth/react";
 import toast from "react-hot-toast";
 import { formatPhone } from "@/lib/format";
-import {
-  formatShiftDate,
-  formatShiftFullDate,
-  formatRotationDay,
-  formatCadence,
-} from "@/lib/shifts/formatShift";
+import { formatShiftDate, formatShiftFullDate } from "@/lib/shifts/formatShift";
 import { addGroceryItem } from "@/actions/grocery/addGroceryItem";
 import { removeGroceryItem } from "@/actions/grocery/removeGroceryItem";
 import { updateGroceryItem } from "@/actions/grocery/updateGroceryItem";
@@ -74,8 +70,12 @@ type Props = {
   circleName: string;
   userName: string;
   userEmail: string;
-  rotationDayOfWeek: number;
-  rotationCadence: "WEEKLY" | "BIWEEKLY" | "CUSTOM";
+  /** "Every Saturday" · "Wednesdays and Saturdays" · "Every day" */
+  scheduleLabel: string;
+  /** More than one visit a week → "this week" wording becomes "next visit". */
+  multipleVisitsPerWeek: boolean;
+  /** They also help in other circles, so show a way back to the dashboard. */
+  hasDashboard: boolean;
   typicalArrivalTime: string | null;
   upcomingShifts: Shift[];
   thisWeekItems: GroceryItem[];
@@ -94,8 +94,9 @@ export default function MyCirclePage({
   circleName,
   userName,
   userEmail,
-  rotationDayOfWeek,
-  rotationCadence,
+  scheduleLabel,
+  multipleVisitsPerWeek,
+  hasDashboard,
   typicalArrivalTime,
   upcomingShifts,
   thisWeekItems,
@@ -348,6 +349,11 @@ export default function MyCirclePage({
         <LayoutWrapper>
           <header className={styles.header}>
             <div>
+              {hasDashboard && (
+                <Link href='/dashboard' className={styles.dashboardLink}>
+                  ← Circles I help with
+                </Link>
+              )}
               <h1 className={styles.title}>Hi {userName}</h1>
             </div>
             <div className={styles.accountInfo}>
@@ -376,7 +382,9 @@ export default function MyCirclePage({
               {/* <p className={styles.thisWeekLabel}>This Week:</p> */}
               <h2 className={styles.thisWeekHelper}>
                 {thisWeekShift.helper.firstName} {thisWeekShift.helper.lastName}{" "}
-                will be assisting this week
+                {multipleVisitsPerWeek
+                  ? "is your next helper"
+                  : "will be assisting this week"}
               </h2>
               <p className={styles.thisWeekDate}>
                 {formatShiftFullDate(new Date(thisWeekShift.scheduledDate))}
@@ -395,10 +403,7 @@ export default function MyCirclePage({
             <section className={styles.section}>
               <div className={styles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>Coming up</h2>
-                <span className={styles.itemCount}>
-                  {formatCadence(rotationCadence)} ·{" "}
-                  {formatRotationDay(rotationDayOfWeek)}
-                </span>
+                <span className={styles.itemCount}>{scheduleLabel}</span>
               </div>
 
               <div className={styles.rotationList}>
@@ -474,7 +479,11 @@ export default function MyCirclePage({
           {/* Grocery List — This Week */}
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>This week&apos;s list</h2>
+              <h2 className={styles.sectionTitle}>
+                {multipleVisitsPerWeek
+                  ? "Next visit\u2019s list"
+                  : "This week\u2019s list"}
+              </h2>
               <span className={styles.itemCount}>
                 {thisWeekItems.length}{" "}
                 {thisWeekItems.length === 1 ? "item" : "items"}

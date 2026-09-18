@@ -23,6 +23,8 @@ type Props = {
     error?: string;
     success?: boolean;
     signInFailed?: boolean;
+    /** Optional — overrides the redirectTo prop for this one submit. */
+    redirectTo?: string;
   }>;
   // Where to redirect on success
   redirectTo: string;
@@ -68,7 +70,7 @@ export default function RegistrationForm({
       return;
     }
 
-    router.push(redirectTo);
+    router.push(result?.redirectTo ?? redirectTo);
     router.refresh();
   };
 

@@ -291,3 +291,13 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* ——— Note under the day picker (meal trains) ——— */
+
+.editHint {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+  margin: 0;
+  hyphens: none;
+}

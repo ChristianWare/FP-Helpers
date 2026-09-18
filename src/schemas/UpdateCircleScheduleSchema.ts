@@ -1,12 +1,12 @@
 // schemas/UpdateCircleScheduleSchema.ts
 import { z } from "zod";
 import { US_STATE_VALUES } from "@/lib/states";
+import { refineSchedule, scheduleFieldShape } from "@/schemas/scheduleFields";
 
 export const UpdateCircleScheduleSchema = z
   .object({
-    rotationDayOfWeek: z.number().int().min(0).max(6),
-    rotationCadence: z.enum(["WEEKLY", "BIWEEKLY"]),
-    typicalArrivalTime: z.string().optional().or(z.literal("")),
+    // Days, cadence, arrival time, duration (shared with the create wizard)
+    ...scheduleFieldShape,
 
     address: z.string().trim().max(200).optional().or(z.literal("")),
     addressCity: z.string().trim().max(80).optional().or(z.literal("")),
@@ -27,20 +27,8 @@ export const UpdateCircleScheduleSchema = z
         "Please enter a 5-digit ZIP",
       ),
     accessNotes: z.string().trim().max(500).optional().or(z.literal("")),
-
-    durationType: z.enum(["INDEFINITE", "FIXED"]),
-    startDate: z.string().optional().or(z.literal("")),
-    endDate: z.string().optional().or(z.literal("")),
   })
-  .refine(
-    (data) =>
-      data.durationType === "INDEFINITE" ||
-      (data.startDate && data.endDate && data.endDate > data.startDate),
-    {
-      message: "End date must be after start date",
-      path: ["endDate"],
-    },
-  );
+  .superRefine(refineSchedule);
 
 export type UpdateCircleScheduleSchemaType = z.infer<
   typeof UpdateCircleScheduleSchema
