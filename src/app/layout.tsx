@@ -6,6 +6,7 @@ import Nav from "@/components/shared/Nav/Nav";
 import Footerii from "@/components/shared/Footerii/Footerii";
 import SessionProvider from "@/components/shared/SessionProvider/SessionProvider";
 import ToastsProvider from "@/components/Providers/ToastsProvider";
+import PlausibleProvider from "next-plausible";
 
 const suissReg = localFont({
   src: "../../public/fonts/SuisseRegular.ttf",
@@ -41,14 +42,23 @@ export default function RootLayout({
       lang='en'
       className={`${suissReg.variable} ${VisbyCF.variable} ${BoogyBrutPoster.variable}`}
     >
+      <head>
+        <link rel='preconnect' href='https://plausible.io' />
+      </head>
       <body>
-        <Nav />
-        <SessionProvider>
-          <ToastsProvider />
-          {children}
-        </SessionProvider>
+        <PlausibleProvider
+          domain='fphelpers.com'
+          trackLocalhost={false}
+          enabled={true}
+        >
+          <Nav />
+          <SessionProvider>
+            <ToastsProvider />
+            {children}
+          </SessionProvider>
 
-        <Footerii />
+          <Footerii />
+        </PlausibleProvider>
       </body>
     </html>
   );
