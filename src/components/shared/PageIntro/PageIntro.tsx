@@ -39,13 +39,15 @@ export default function PageIntro({
               <div className={styles.btnContainer}>
                 <Button
                   href='/create-circle'
-                  text='Create a Circle or Meal Train'
+                  text='Create new'
                   btnType='white'
-                />
+                  plus
+                  />
                 <Button
                   href='/find'
-                  text='Find a Circle or Meal Train'
+                  text='Find existing'
                   btnType='secondary'
+                  arrow
                 />
                
               </div>

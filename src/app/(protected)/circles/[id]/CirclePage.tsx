@@ -4,6 +4,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import styles from "./CirclePage.module.css";
 import LayoutWrapper from "@/components/shared/LayoutWrapper";
 import SectionHeading from "@/components/shared/SectionHeading/SectionHeading";
@@ -21,6 +23,7 @@ import MealCalendar, {
 } from "@/components/meals/MealCalendar/MealCalendar";
 import MealDetailsSection from "@/components/meals/MealDetailsSection/MealDetailsSection";
 import DirectoryToggle from "@/components/circles/DirectoryToggle/DirectoryToggle";
+import { joinCircleAsExistingUser } from "@/actions/circles/joinCircleAsExistingUser";
 
 type RotationShift = {
   id: string;
@@ -60,8 +63,9 @@ type Props = {
     id: string;
     firstName: string;
     lastName: string;
-    email: string;
-    phone: string;
+    /** Null when the viewer is only previewing — contact info stays private. */
+    email: string | null;
+    phone: string | null;
   } | null;
   memberships: {
     id: string;
@@ -71,8 +75,8 @@ type Props = {
       id: string;
       firstName: string;
       lastName: string;
-      email: string;
-      phone: string;
+      email: string | null;
+      phone: string | null;
     };
   }[];
   myNextShift: {
@@ -81,6 +85,10 @@ type Props = {
   } | null;
   currentUserId: string;
   currentUserRole: string | null;
+  /** False when a signed-in non-member is previewing a listed circle. */
+  isMember: boolean;
+  /** Active invite token — powers the Join button on the preview. */
+  joinToken: string | null;
   joinUrl: string | null;
   justCreated: boolean;
   /** The recipient's email already had an account, so no password was set. */
@@ -101,6 +109,8 @@ export default function CirclePage({
   memberships,
   currentUserId,
   currentUserRole,
+  isMember,
+  joinToken,
   joinUrl,
   justCreated,
   recipientHadAccount,
@@ -111,7 +121,9 @@ export default function CirclePage({
   mealSlots,
   myNextShift,
 }: Props) {
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
+  const [joining, setJoining] = useState(false);
 
   const helpers = memberships.filter((m) => m.role !== "RECIPIENT");
   const isAdmin = currentUserRole === "ADMIN";
@@ -143,6 +155,62 @@ export default function CirclePage({
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  // ——— Preview mode: signed-in non-member browsing from the directory ———
+
+  const joinFromPreview = async () => {
+    if (!joinToken || joining) return;
+    setJoining(true);
+    const result = await joinCircleAsExistingUser(joinToken);
+    if (result.success) {
+      toast.success("Welcome aboard!");
+      router.push(result.redirectTo);
+      router.refresh();
+    } else {
+      toast.error(result.error);
+      setJoining(false);
+    }
+  };
+
+  const previewBanner = !isMember ? (
+    <div className={styles.previewBanner}>
+      <div>
+        <p className={styles.previewTitle}>
+          {"You're browsing — you haven't joined yet"}
+        </p>
+        <p className={styles.previewText}>
+          {isMealTrain
+            ? `Have a look around. When you're ready, sign up for one of the open days${recipient ? ` to bring ${recipient.firstName} a meal` : ""}.`
+            : `Have a look around. Joining adds you to the rotation${recipient ? ` helping ${recipient.firstName}` : ""}, taking turns with the helpers below.`}{" "}
+          Addresses and contact details stay hidden until you join.
+        </p>
+      </div>
+      {isMealTrain ? (
+        joinToken ? (
+          <Link href={`/join/${joinToken}`} className={styles.previewJoinBtn}>
+            Pick a day →
+          </Link>
+        ) : (
+          <p className={styles.previewNoLink}>
+            Ask the organizer for an invite link to sign up.
+          </p>
+        )
+      ) : joinToken ? (
+        <button
+          type='button'
+          className={styles.previewJoinBtn}
+          onClick={joinFromPreview}
+          disabled={joining}
+        >
+          {joining ? "Joining..." : "Join this circle"}
+        </button>
+      ) : (
+        <p className={styles.previewNoLink}>
+          Ask the organizer for an invite link to join.
+        </p>
+      )}
+    </div>
+  ) : null;
 
   // ——— Two blocks that are laid out differently per circle type ———
 
@@ -216,6 +284,8 @@ export default function CirclePage({
               dotColor='purpleDot'
             />
           </div>
+
+          {previewBanner}
 
           {justCreated && (
             <>
@@ -298,7 +368,7 @@ export default function CirclePage({
             </section>
           )}
 
-          {isMealTrain && (
+          {isMealTrain && isMember && (
             <MealDetailsSection
               circleId={circle.id}
               details={{
@@ -317,11 +387,17 @@ export default function CirclePage({
               couldn't see or edit it.) */}
           {(isMealTrain || !nextShiftBanner) && scheduleSection}
 
-          {/* Recipient */}
-          {recipient && (
+          {/* Recipient — members only: it holds contact info and password reset */}
+          {recipient && isMember && (
             <RecipientSection
               circleId={circle.id}
-              recipient={recipient}
+              recipient={{
+                id: recipient.id,
+                firstName: recipient.firstName,
+                lastName: recipient.lastName,
+                email: recipient.email ?? "",
+                phone: recipient.phone ?? "",
+              }}
               isAdmin={isAdmin}
             />
           )}
@@ -422,13 +498,17 @@ export default function CirclePage({
                           </span>
                         )}
                       </div>
-                      <a
-                        href={`tel:${m.user.phone}`}
-                        className={styles.helperPhone}
-                      >
-                        {formatPhone(m.user.phone)}
-                      </a>
-                      <p className={styles.helperEmail}>{m.user.email}</p>
+                      {m.user.phone && (
+                        <a
+                          href={`tel:${m.user.phone}`}
+                          className={styles.helperPhone}
+                        >
+                          {formatPhone(m.user.phone)}
+                        </a>
+                      )}
+                      {m.user.email && (
+                        <p className={styles.helperEmail}>{m.user.email}</p>
+                      )}
 
                       {!isMealTrain && m.inRotation && (
                         <div className={styles.helperRotation}>

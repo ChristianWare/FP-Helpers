@@ -67,14 +67,21 @@ export default async function Page({
   const membership = circle.memberships.find(
     (m) => m.userId === session.user.id,
   );
-  if (!membership && !session.user.isSuperAdmin) {
+
+  // Non-members may PREVIEW a circle — but only if the organizer listed it in
+  // the congregation directory, and only a stripped-down version: names,
+  // schedule and rotation, never addresses, phone numbers, emails or notes.
+  // Unlisted circles keep their promise: invite link only.
+  const isMember = !!membership || !!session.user.isSuperAdmin;
+  const canPreview = circle.listedInDirectory && circle.status === "ACTIVE";
+  if (!isMember && !canPreview) {
     redirect("/dashboard");
   }
+  const previewOnly = !isMember;
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const joinUrl = circle.joinLinks[0]
-    ? `${baseUrl}/join/${circle.joinLinks[0].token}`
-    : null;
+  const joinToken = circle.joinLinks[0]?.token ?? null;
+  const joinUrl = joinToken ? `${baseUrl}/join/${joinToken}` : null;
 
   // "Today or later" for shifts — see lib/shifts/scheduleDates.ts for why this
   // isn't simply midnight UTC.
@@ -173,11 +180,11 @@ export default async function Page({
         id: circle.id,
         name: circle.name,
         status: circle.status,
-        address: circle.address,
-        addressCity: circle.addressCity,
-        addressState: circle.addressState,
-        addressZip: circle.addressZip,
-        accessNotes: circle.accessNotes,
+        address: previewOnly ? null : circle.address,
+        addressCity: previewOnly ? null : circle.addressCity,
+        addressState: previewOnly ? null : circle.addressState,
+        addressZip: previewOnly ? null : circle.addressZip,
+        accessNotes: previewOnly ? null : circle.accessNotes,
         circleType: circle.circleType,
         listedInDirectory: circle.listedInDirectory,
         rotationDaysOfWeek: getCircleDays(circle),
@@ -186,20 +193,39 @@ export default async function Page({
         durationType: circle.durationType,
         startDate: circle.startDate?.toISOString() ?? null,
         endDate: circle.endDate?.toISOString() ?? null,
-        mealHouseholdSize: circle.mealHouseholdSize,
-        mealAllergies: circle.mealAllergies,
-        mealPreferences: circle.mealPreferences,
+        mealHouseholdSize: previewOnly ? null : circle.mealHouseholdSize,
+        mealAllergies: previewOnly ? null : circle.mealAllergies,
+        mealPreferences: previewOnly ? null : circle.mealPreferences,
       }}
-      recipient={circle.recipient}
+      recipient={
+        circle.recipient
+          ? {
+              id: circle.recipient.id,
+              firstName: circle.recipient.firstName,
+              lastName: circle.recipient.lastName,
+              // Contact details never leave the server for a preview
+              email: previewOnly ? null : circle.recipient.email,
+              phone: previewOnly ? null : circle.recipient.phone,
+            }
+          : null
+      }
       memberships={circle.memberships.map((m) => ({
         id: m.id,
         role: m.role,
         inRotation: m.inRotation,
-        user: m.user,
+        user: {
+          id: m.user.id,
+          firstName: m.user.firstName,
+          lastName: m.user.lastName,
+          email: previewOnly ? null : m.user.email,
+          phone: previewOnly ? null : m.user.phone,
+        },
       }))}
       currentUserId={session.user.id!}
       currentUserRole={membership?.role ?? null}
-      joinUrl={joinUrl}
+      isMember={isMember}
+      joinToken={joinToken}
+      joinUrl={previewOnly ? null : joinUrl}
       justCreated={justCreated}
       recipientHadAccount={recipientHadAccount}
       justJoined={justJoined}

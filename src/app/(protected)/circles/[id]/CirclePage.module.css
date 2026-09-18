@@ -678,3 +678,72 @@
   margin: 0;
   hyphens: none;
 }
+
+/* ——— Preview mode: signed-in non-member browsing from the directory ——— */
+
+.previewBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 20px 24px;
+  background: #faf7ff;
+  border: 1px solid #ddd6fe;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.previewTitle {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: #4c1d95;
+  margin: 0 0 4px;
+}
+
+.previewText {
+  font-size: 14px;
+  color: #6d28d9;
+  line-height: 1.5;
+  margin: 0;
+  max-width: 560px;
+  hyphens: none;
+}
+
+.previewJoinBtn {
+  flex-shrink: 0;
+  padding: 14px 28px;
+  background: var(--purple);
+  color: var(--tan);
+  border: 1px solid var(--purple);
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.previewJoinBtn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.previewJoinBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.previewJoinBtn:focus-visible {
+  outline: 3px solid rgba(95, 70, 223, 0.35);
+  outline-offset: 2px;
+}
+
+.previewNoLink {
+  font-size: 14px;
+  color: #7c3aed;
+  font-style: italic;
+  margin: 0;
+}

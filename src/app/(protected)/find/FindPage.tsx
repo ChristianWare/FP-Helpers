@@ -76,7 +76,7 @@ export default function FindPage({ viewerSignedIn, circles }: Props) {
               color='black'
               dotColor='purpleDot'
             />
-            <h1 className={styles.title}>Find a circle</h1>
+            <h1 className={styles.title}>Find a Circle or Meal Train</h1>
             <p className={styles.subtitle}>
               Meal trains and care circles in the congregation that could use
               another pair of hands.
@@ -159,13 +159,11 @@ export default function FindPage({ viewerSignedIn, circles }: Props) {
                 <div className={styles.grid}>
                   {visible.map((c) => {
                     const isMealTrain = c.circleType === "MEAL_TRAIN";
+                    // Members open their circle; everyone else browses the
+                    // read-only preview and can enroll from there.
                     const openHref = c.isRecipient
                       ? `/my-circle?circle=${c.id}`
-                      : c.isMember
-                        ? `/circles/${c.id}`
-                        : c.joinToken
-                          ? `/join/${c.joinToken}`
-                          : null;
+                      : `/circles/${c.id}`;
 
                     return (
                       <div
@@ -219,21 +217,15 @@ export default function FindPage({ viewerSignedIn, circles }: Props) {
                           </p>
                         )}
 
-                        {openHref ? (
-                          <Link href={openHref} className={styles.cardBtn}>
-                            {c.isRecipient
-                              ? "Open my page"
-                              : c.isMember
-                                ? "Open circle"
-                                : isMealTrain
-                                  ? "View days & sign up"
-                                  : "View & join"}
-                          </Link>
-                        ) : (
-                          <p className={styles.noLink}>
-                            Ask the organizer for an invite link
-                          </p>
-                        )}
+                        <Link href={openHref} className={styles.cardBtn}>
+                          {c.isRecipient
+                            ? "Open my page"
+                            : c.isMember
+                              ? "Open circle"
+                              : isMealTrain
+                                ? "View meal train"
+                                : "View circle"}
+                        </Link>
                       </div>
                     );
                   })}

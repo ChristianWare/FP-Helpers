@@ -8,9 +8,9 @@ import Logo from "../Logo/Logo";
 
 const navItems = [
   { text: "Home", href: "/" },
-  { text: "dashboard", href: "/dashboard" },
-  { text: "find a circle", href: "/find" },
-  { text: "create circle", href: "/create-circle" },
+  { text: "My Dashboard", href: "/dashboard" },
+  { text: "Find", href: "/find" },
+  { text: "Create", href: "/create-circle" },
 ];
 
 const Nav = () => {

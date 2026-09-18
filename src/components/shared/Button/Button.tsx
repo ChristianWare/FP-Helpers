@@ -4,6 +4,8 @@
 import { FC, ReactNode } from "react";
 import Link from "next/link";
 import styles from "./Button.module.css";
+import Arrow from "../icons/Arrow/Arrow";
+import Plus from "../icons/Plus/Plus";
 // import Arrow from "../../../public/icons/arrow2.svg";
 
 interface ButtonProps {
@@ -13,6 +15,7 @@ interface ButtonProps {
   target?: string;
   download?: boolean;
   arrow?: boolean;
+  plus?: boolean;
   onClick?: any;
   disabled?: boolean;
 }
@@ -24,7 +27,8 @@ const Button: FC<ButtonProps> = ({
   target = "",
   download,
   onClick,
-  // arrow,
+  arrow,
+  plus,
   disabled = false,
 }) => {
   return (
@@ -42,7 +46,8 @@ const Button: FC<ButtonProps> = ({
         download={download}
       >
         {text}
-        {/* {arrow && <Arrow className={styles.arrow} />} */}
+        {arrow && <Arrow className={styles.arrow} />}
+        {plus && <Plus className={styles.arrow} />}
       </Link>
     </button>
   );
