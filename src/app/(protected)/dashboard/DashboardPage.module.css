@@ -23,10 +23,6 @@
   color: var(--purple);
 }
 
-.emptyTitle {
-  margin-bottom: 2rem;
-}
-
 @media screen and (max-width: 568px) {
   .title {
     font-size: 6rem;
@@ -110,7 +106,7 @@
   color: #666;
   line-height: 1.5;
   margin: 0 0 24px;
-  max-width: 500px;
+  max-width: 400px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -536,7 +532,7 @@
   color: #555;
 }
 
-/* ——— Empty state: the two paths side by side ——— */
+/* ——— Empty state: the two ways in, side by side ——— */
 
 .emptyActions {
   display: flex;
@@ -547,8 +543,7 @@
   margin-top: 8px;
 }
 
-/* "Find a circle to join" — the filled option, since joining is the more
-   common path for most members */
+/* "Find a circle to join" — filled, since joining is the more common path */
 .findBtn {
   display: inline-block;
   padding: 14px 28px;

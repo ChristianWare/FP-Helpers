@@ -15,6 +15,7 @@ import {
 } from "@/schemas/UpdateCircleScheduleSchema";
 import { updateCircleSchedule } from "@/actions/circles/updateCircleSchedule";
 import SchedulePicker from "@/components/circles/SchedulePicker/SchedulePicker";
+import DateField from "@/components/shared/DateField/DateField";
 import {
   describeCadence,
   describeDays,
@@ -118,6 +119,7 @@ export default function ScheduleSection({
   const watchedMultipleDays = watch("rotationDaysOfWeek");
   const watchedCadence = watch("rotationCadence");
   const watchedStart = watch("startDate");
+  const watchedEnd = watch("endDate");
 
   const isMealTrain = schedule.circleType === "MEAL_TRAIN";
 
@@ -429,11 +431,16 @@ export default function ScheduleSection({
                 <label className={styles.label} htmlFor='editStart'>
                   Start date
                 </label>
-                <input
+                <DateField
                   id='editStart'
-                  type='date'
-                  className={`${styles.input} ${errors.startDate ? styles.inputError : ""}`}
-                  {...register("startDate")}
+                  value={watchedStart ?? ""}
+                  hasError={!!errors.startDate}
+                  onChange={(value) =>
+                    setValue("startDate", value, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }
                 />
                 {errors.startDate && (
                   <span className={styles.fieldError}>
@@ -445,12 +452,17 @@ export default function ScheduleSection({
                 <label className={styles.label} htmlFor='editEnd'>
                   End date
                 </label>
-                <input
+                <DateField
                   id='editEnd'
-                  type='date'
+                  value={watchedEnd ?? ""}
                   min={watchedStart || todayIso}
-                  className={`${styles.input} ${errors.endDate ? styles.inputError : ""}`}
-                  {...register("endDate")}
+                  hasError={!!errors.endDate}
+                  onChange={(value) =>
+                    setValue("endDate", value, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }
                 />
                 {errors.endDate && (
                   <span className={styles.fieldError}>

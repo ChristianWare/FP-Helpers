@@ -16,6 +16,7 @@ import { US_STATES } from "@/lib/states";
 import styles from "./CreateCirclePage.module.css";
 import LayoutWrapper from "@/components/shared/LayoutWrapper";
 import SchedulePicker from "@/components/circles/SchedulePicker/SchedulePicker";
+import DateField from "@/components/shared/DateField/DateField";
 import {
   computeScheduleKeys,
   dateKeyToNoonUtc,
@@ -824,12 +825,16 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
                             <label className={styles.label} htmlFor='startDate'>
                               Start date
                             </label>
-                            <input
+                            <DateField
                               id='startDate'
-                              type='date'
+                              value={startDate ?? ""}
                               min={todayIso}
-                              className={`${styles.input} ${errors.startDate ? styles.inputError : ""}`}
-                              {...register("startDate")}
+                              hasError={!!errors.startDate}
+                              onChange={(value) =>
+                                setValue("startDate", value, {
+                                  shouldValidate: true,
+                                })
+                              }
                             />
                             {errors.startDate && (
                               <span className={styles.fieldError}>
@@ -841,12 +846,16 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
                             <label className={styles.label} htmlFor='endDate'>
                               End date
                             </label>
-                            <input
+                            <DateField
                               id='endDate'
-                              type='date'
+                              value={endDate ?? ""}
                               min={startDate || todayIso}
-                              className={`${styles.input} ${errors.endDate ? styles.inputError : ""}`}
-                              {...register("endDate")}
+                              hasError={!!errors.endDate}
+                              onChange={(value) =>
+                                setValue("endDate", value, {
+                                  shouldValidate: true,
+                                })
+                              }
                             />
                             {errors.endDate && (
                               <span className={styles.fieldError}>

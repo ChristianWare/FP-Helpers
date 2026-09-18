@@ -149,8 +149,8 @@ export default async function DashboardPage() {
           {memberships.length === 0 ? (
             <div className={styles.emptyState}>
               <div className={styles.emptyIcon}>🤝</div>
-              <h2 className={styles.emptyTitle}>
-                {"You're not part of a circle yet"}
+              <h2 className={styles.emptyHeading}>
+                You&apos;re not part of a circle yet
               </h2>
               <p className={styles.emptyText}>
                 Join a meal train or care circle that&apos;s already going in
@@ -161,9 +161,11 @@ export default async function DashboardPage() {
                 <Link href='/find' className={styles.findBtn}>
                   Find a circle to join
                 </Link>
-                <Link href='/create-circle' className={styles.createBtn}>
-                  + Create a new circle
-                </Link>
+                <Button
+                  href='/create-circle'
+                  text='+ Create a new circle'
+                  btnType='primaryii'
+                />
               </div>
               <p className={styles.emptyHint}>
                 Got an invite link from a group chat? Just tap it — it brings
