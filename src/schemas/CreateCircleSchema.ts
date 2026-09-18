@@ -65,6 +65,9 @@ export const CreateCircleSchema = z
     // Final step — standard circles
     organizerInRotation: z.boolean(),
 
+    // Final step — list on the congregation directory (/find) right away?
+    listedInDirectory: z.boolean(),
+
     // Final step — meal trains (all optional)
     mealHouseholdSize: z
       .string()

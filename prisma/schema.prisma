@@ -252,6 +252,11 @@ model CareCircle {
   // Standard rotation circle or meal train — chosen in step 1 of the wizard
   circleType CircleType @default(STANDARD)
 
+  // Show this circle in the signed-in congregation directory (/find), so
+  // members can discover it and sign up. Off by default; the organizer turns
+  // it on (ideally after checking with the recipient).
+  listedInDirectory Boolean @default(false)
+
   // The recipient (elderly friend)
   recipientId String?
   recipient   User?   @relation("CircleRecipient", fields: [recipientId], references: [id], onDelete: SetNull)

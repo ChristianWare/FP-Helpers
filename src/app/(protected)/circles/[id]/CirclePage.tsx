@@ -20,6 +20,7 @@ import MealCalendar, {
   type MealSlot,
 } from "@/components/meals/MealCalendar/MealCalendar";
 import MealDetailsSection from "@/components/meals/MealDetailsSection/MealDetailsSection";
+import DirectoryToggle from "@/components/circles/DirectoryToggle/DirectoryToggle";
 
 type RotationShift = {
   id: string;
@@ -44,6 +45,7 @@ type Props = {
     addressZip: string | null;
     accessNotes: string | null;
     circleType: "STANDARD" | "MEAL_TRAIN";
+    listedInDirectory: boolean;
     rotationDaysOfWeek: number[];
     rotationCadence: string;
     typicalArrivalTime: string | null;
@@ -370,6 +372,12 @@ export default function CirclePage({
                   {copied ? "Copied!" : "Copy"}
                 </button>
               </div>
+
+              <DirectoryToggle
+                circleId={circle.id}
+                listed={circle.listedInDirectory}
+                isMealTrain={isMealTrain}
+              />
             </section>
           )}
 

@@ -43,6 +43,7 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
 
   const {
     circleType,
+    listedInDirectory,
     circleName,
     recipientFirstName,
     recipientLastName,
@@ -134,6 +135,7 @@ export const createCircle = async (values: CreateCircleSchemaType) => {
           addressZip: addressZip?.trim() || null,
           accessNotes: accessNotes?.trim() || null,
           circleType,
+          listedInDirectory,
           rotationDaysOfWeek,
           rotationDayOfWeek: rotationDaysOfWeek[0], // legacy column, kept in sync
           rotationCadence,

@@ -23,7 +23,9 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  transition: all 0.2s ease-in, color 0.1s ease-in;
+  transition:
+    all 0.2s ease-in,
+    color 0.1s ease-in;
 }
 
 .primary {
@@ -77,6 +79,13 @@
   color: var(--tan);
 }
 
+.secondary {
+  border-bottom: 2px solid var(--tan);
+  border-radius: 0px;
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
 .secondaryNav {
   padding: 5px 30px;
   font-size: 1.6rem;
@@ -84,7 +93,9 @@
   user-select: none;
   gap: 2rem;
   width: fit-content;
-  transition: background-color 0.1s ease-in, color 0.1s ease-in;
+  transition:
+    background-color 0.1s ease-in,
+    color 0.1s ease-in;
   line-height: 2rem;
   text-align: center;
   text-transform: capitalize;
@@ -97,7 +108,6 @@
   color: var(--purple);
 }
 
-.secondary:hover,
 .primaryNav:hover {
   background-color: var(--purple2);
   color: var(--tan);

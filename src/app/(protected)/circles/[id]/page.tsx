@@ -179,6 +179,7 @@ export default async function Page({
         addressZip: circle.addressZip,
         accessNotes: circle.accessNotes,
         circleType: circle.circleType,
+        listedInDirectory: circle.listedInDirectory,
         rotationDaysOfWeek: getCircleDays(circle),
         rotationCadence: circle.rotationCadence,
         typicalArrivalTime: circle.typicalArrivalTime,

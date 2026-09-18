@@ -24,6 +24,11 @@
   z-index: 1000;
 }
 
+/* ─────────────────────────────────────────────
+   Desktop (default, above 768px): links inline,
+   no hamburger, no overlay
+   ───────────────────────────────────────────── */
+
 .navMenu,
 .navBox {
   display: flex;
@@ -34,25 +39,34 @@
   position: relative;
 }
 
+.navBox {
+  padding: 1rem 2rem;
+  border: 1px solid var(--tan);
+  background-color: var(--purple);
+  border-radius: 50px;
+}
+
 .mobileLogo {
   display: none;
+}
+
+.desktopLogo {
+  display: block;
 }
 
 .navItem {
   position: relative;
   line-height: 1;
-  color: var(--purple);
+  color: var(--white);
   user-select: none;
   scroll-behavior: smooth;
   z-index: 998;
   transition: color 0.1s ease-in-out;
-  font-size: 8rem;
+  font-size: 1.6rem;
   font-family: var(--VisbyCF);
   text-transform: uppercase;
-  padding-left: 2rem;
-  padding-bottom: 1rem;
   font-weight: 600;
-  letter-spacing: -1px;
+  letter-spacing: 0.5px;
 }
 
 .icon {
@@ -69,9 +83,20 @@
   display: none;
 }
 
+/* The "Schedule discovery call" button stays hidden at every size,
+   exactly as it is on your live site today. To bring it back on
+   desktop, change this to display: flex. */
+.btnContainer {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 3rem;
+  z-index: 998;
+}
+
 .hamburger {
   display: none;
-  z-index: 999;
+  z-index: 9999;
   position: relative;
   user-select: none;
   font-size: 2rem;
@@ -82,6 +107,7 @@
   background-color: var(--purple);
   color: var(--tan);
   transition: all 0.2s ease-in;
+  cursor: pointer;
 }
 
 .whiteBar {
@@ -100,14 +126,6 @@
   z-index: 3;
 }
 
-.btnContainer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3rem;
-  z-index: 998;
-}
-
 .phone {
   position: relative;
   top: 5px;
@@ -124,70 +142,6 @@
   transition: all 0.3s ease-in-out;
 }
 
-.navbar {
-  align-items: center;
-  justify-content: space-between;
-}
-
-.navMenu {
-  position: fixed;
-  right: -100%;
-  top: 0px;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3rem;
-  width: 100%;
-  height: 100vh;
-  transition: 0.3s all ease-in;
-  z-index: 1000;
-  background-color: var(--);
-  transform-origin: top;
-  transition: all 0.3s ease-in;
-  background-color: var(--tan);
-}
-
-.navMenu.active {
-  right: 0%;
-}
-
-.mobileLogo {
-  display: block;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  width: 100%;
-}
-
-.desktopLogo {
-  display: none;
-}
-
-.navBox {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  gap: 3rem;
-  border-radius: 10px;
-  width: 100%;
-}
-
-.icon {
-  color: var(--black2);
-  position: relative;
-}
-
-.btnContainer {
-  display: none;
-}
-
-.hamburger {
-  display: block;
-  cursor: pointer;
-  z-index: 9999;
-}
-
 .hamburger.active .whiteBar:nth-child(1) {
   -webkit-transform: translateY(8px) rotate(45deg);
   transform: translateY(8px) rotate(45deg);
@@ -202,6 +156,73 @@
   -webkit-transform: translateY(-8px) rotate(-45deg);
   transform: translateY(-8px) rotate(-45deg);
   background-color: var(--green3);
+}
+
+/* ─────────────────────────────────────────────
+   768px and below: links hide behind the Menu
+   button and open as the full-screen overlay
+   ───────────────────────────────────────────── */
+
+@media screen and (max-width: 968px) {
+  .navMenu {
+    position: fixed;
+    right: -100%;
+    top: 0px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3rem;
+    width: 100%;
+    height: 100vh;
+    transition: all 0.3s ease-in;
+    z-index: 1000;
+    transform-origin: top;
+    background-color: var(--tan);
+  }
+
+  .navMenu.active {
+    right: 0%;
+  }
+
+  .navBox {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 3rem;
+    border-radius: 10px;
+    width: 100%;
+    border-radius: 0px;
+    padding: 0rem;
+    border: none;
+    background-color: var(--tan);
+  }
+
+  .navItem {
+    font-size: 8rem;
+    padding-left: 2rem;
+    padding-bottom: 1rem;
+    letter-spacing: -1px;
+    color: var(--purple);
+  }
+
+  .mobileLogo {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .desktopLogo {
+    display: none;
+  }
+
+  .icon {
+    color: var(--black2);
+  }
+
+  .hamburger {
+    display: block;
+  }
 }
 
 @media screen and (max-width: 568px) {

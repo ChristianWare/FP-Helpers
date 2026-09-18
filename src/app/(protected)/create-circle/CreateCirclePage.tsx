@@ -151,6 +151,7 @@ const STEP_FIELDS: Record<StepId, (keyof CreateCircleSchemaType)[]> = {
   ],
   final: [
     "organizerInRotation",
+    "listedInDirectory",
     "mealHouseholdSize",
     "mealAllergies",
     "mealPreferences",
@@ -197,6 +198,7 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
       startDate: "",
       endDate: "",
       organizerInRotation: true,
+      listedInDirectory: false,
       mealHouseholdSize: "",
       mealAllergies: "",
       mealPreferences: "",
@@ -214,6 +216,8 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
   const rotationCadence = watch("rotationCadence");
 
   const isMealTrain = circleType === "MEAL_TRAIN";
+  const watchedListed = watch("listedInDirectory");
+  const watchedRecipientFirstName = watch("recipientFirstName");
   const stepId = STEP_ORDER[currentStep];
 
   // Picking a type sets sensible starting points for the later steps.
@@ -327,6 +331,62 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
       scheduleSummary = `${describeSchedule(chosenDays, rotationCadence)}, until you end the circle.`;
     }
   }
+
+  // ——— "Who can find this?" — the visibility choice on the final step.
+  // Same setting as the toggle on the circle page; this just asks up front.
+  const visibilityChooser = (
+    <div className={styles.field}>
+      <p className={styles.label}>
+        Who can find this {isMealTrain ? "meal train" : "circle"}?
+      </p>
+      <div className={styles.radioGroup}>
+        <label
+          className={`${styles.radioOption} ${watchedListed ? styles.radioOptionActive : ""}`}
+        >
+          <input
+            type='radio'
+            name='listedInDirectory'
+            className={styles.radioInput}
+            checked={watchedListed}
+            onChange={() => setValue("listedInDirectory", true)}
+          />
+          <div className={styles.radioContent}>
+            <p className={styles.radioTitle}>Share with the congregation</p>
+            <p className={styles.radioDescription}>
+              Listed on the Find a circle page, where signed-in members can see
+              it and sign up to help. Only the name, who it&apos;s for, and the
+              schedule are shown &mdash; never the address or personal details.
+            </p>
+          </div>
+        </label>
+
+        <label
+          className={`${styles.radioOption} ${!watchedListed ? styles.radioOptionActive : ""}`}
+        >
+          <input
+            type='radio'
+            name='listedInDirectory'
+            className={styles.radioInput}
+            checked={!watchedListed}
+            onChange={() => setValue("listedInDirectory", false)}
+          />
+          <div className={styles.radioContent}>
+            <p className={styles.radioTitle}>Keep it private</p>
+            <p className={styles.radioDescription}>
+              Only people you share the invite link with can find it.
+            </p>
+          </div>
+        </label>
+      </div>
+      <p className={styles.helpText}>
+        You can change this any time on the circle&apos;s page
+        {watchedRecipientFirstName
+          ? ` — worth checking with ${watchedRecipientFirstName} first`
+          : ""}
+        .
+      </p>
+    </div>
+  );
 
   return (
     <div className={styles.page}>
@@ -898,6 +958,8 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
                           </p>
                         </div>
                       </div>
+
+                      {visibilityChooser}
                     </div>
                   )}
 
@@ -972,6 +1034,8 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
                         Want to bring a meal yourself? Once the circle is
                         created you can sign up for a day like everyone else.
                       </p>
+
+                      {visibilityChooser}
                     </div>
                   )}
                 </div>

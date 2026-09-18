@@ -149,18 +149,26 @@ export default async function DashboardPage() {
           {memberships.length === 0 ? (
             <div className={styles.emptyState}>
               <div className={styles.emptyIcon}>🤝</div>
-              <h2 className={styles.emptyHeading}>
-                You haven&apos;t created any circles yet
+              <h2 className={styles.emptyTitle}>
+                {"You're not part of a circle yet"}
               </h2>
               <p className={styles.emptyText}>
-                Create your first care circle to start coordinating help for
-                someone in the congregation.
+                Join a meal train or care circle that&apos;s already going in
+                the congregation — or start a new one for someone who needs a
+                hand.
               </p>
-              <Button
-                href='/create-circle'
-                text='+ Create your first circle'
-                btnType='primaryii'
-              />
+              <div className={styles.emptyActions}>
+                <Link href='/find' className={styles.findBtn}>
+                  Find a circle to join
+                </Link>
+                <Link href='/create-circle' className={styles.createBtn}>
+                  + Create a new circle
+                </Link>
+              </div>
+              <p className={styles.emptyHint}>
+                Got an invite link from a group chat? Just tap it — it brings
+                you straight in.
+              </p>
             </div>
           ) : (
             <>

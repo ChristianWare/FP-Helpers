@@ -42,6 +42,11 @@ export default function PageIntro({
                   text='Create a Circle or Meal Train'
                   btnType='white'
                 />
+                <Button
+                  href='/find'
+                  text='Find a Circle or Meal Train'
+                  btnType='secondary'
+                />
                
               </div>
             </div>

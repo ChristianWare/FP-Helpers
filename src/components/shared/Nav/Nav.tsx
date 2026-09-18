@@ -5,74 +5,27 @@ import Link from "next/link";
 import Button from "../Button/Button";
 import styles from "./Nav.module.css";
 import Logo from "../Logo/Logo";
-// import ScrollIndicator from "../ScrollIndicator/ScrollIndicator";
-// import { useTransitionRouter } from "next-view-transitions";
 
 const navItems = [
+  { text: "Home", href: "/" },
   { text: "dashboard", href: "/dashboard" },
+  { text: "find a circle", href: "/find" },
   { text: "create circle", href: "/create-circle" },
-
 ];
 
 const Nav = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const navRef = useRef<HTMLElement | null>(null);
-  const containerRef = useRef<HTMLUListElement | null>(null);
-
-//   const router = useTransitionRouter();
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const openMenu = () => {
     setIsOpen((prev) => !prev);
   };
 
-//   function slideInOut() {
-//     if (!document.startViewTransition) return;
-
-//     const transition = document.startViewTransition(() => {
-      
-//     });
-
-//     transition.ready.then(() => {
-//       document.documentElement.animate(
-//         [
-//           { transform: "translateY(0)", opacity: 1 },
-//           { transform: "translateY(-35%)", opacity: 0.2 },
-//         ],
-//         {
-//           duration: 1500,
-//           easing: "cubic-bezier(0.87, 0, 0.13, 1)",
-//           pseudoElement: "::view-transition-old(root)",
-//         },
-//       );
-
-//       document.documentElement.animate(
-//         [
-//           { clipPath: "polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%)" },
-//           { clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)" },
-//         ],
-//         {
-//           duration: 1500,
-//           easing: "cubic-bezier(0.87, 0, 0.13, 1)",
-//           pseudoElement: "::view-transition-new(root)",
-//         },
-//       );
-//     });
-//   }
-
-  // Add this at the top of your component
-  // const [supportsViewTransitions, setSupportsViewTransitions] = useState(false);
-
-  // useEffect(() => {
-  //   setSupportsViewTransitions(
-  //     typeof document !== "undefined" && "startViewTransition" in document
-  //   );
-  // }, []);
-
   return (
     <>
       <header className={styles.header} ref={navRef}>
-        {/* <ScrollIndicator /> */}
         <nav className={styles.navbar}>
           <div className={styles.mobileLogo}>
             <Logo />
@@ -81,12 +34,11 @@ const Nav = () => {
             <Logo />
           </div>
 
-          <ul
+          <div
             ref={containerRef}
             className={`${styles.navMenu} ${isOpen ? styles.active : ""}`}
           >
-            {" "}
-            <div className={styles.navBox}>
+            <ul className={styles.navBox}>
               {navItems.map((navItem, index) => (
                 <li key={index}>
                   <Link
@@ -100,8 +52,8 @@ const Nav = () => {
                   </Link>
                 </li>
               ))}
-            </div>
-          </ul>
+            </ul>
+          </div>
 
           <div className={styles.btnContainer}>
             <Button
