@@ -163,7 +163,9 @@ export default function CirclePage({
     setJoining(true);
     const result = await joinCircleAsExistingUser(joinToken);
     if (result.success) {
-      toast.success("Welcome aboard!");
+      toast.success(
+        isMealTrain ? "You're in — pick your days below" : "Welcome aboard!",
+      );
       router.push(result.redirectTo);
       router.refresh();
     } else {
@@ -180,29 +182,23 @@ export default function CirclePage({
         </p>
         <p className={styles.previewText}>
           {isMealTrain
-            ? `Have a look around. When you're ready, sign up for one of the open days${recipient ? ` to bring ${recipient.firstName} a meal` : ""}.`
+            ? `Have a look around. Joining lets you claim open days on the calendar below${recipient ? ` and bring ${recipient.firstName} a meal` : ""} — you won't be committed to anything until you pick a day.`
             : `Have a look around. Joining adds you to the rotation${recipient ? ` helping ${recipient.firstName}` : ""}, taking turns with the helpers below.`}{" "}
           Addresses and contact details stay hidden until you join.
         </p>
       </div>
-      {isMealTrain ? (
-        joinToken ? (
-          <Link href={`/join/${joinToken}`} className={styles.previewJoinBtn}>
-            Pick a day →
-          </Link>
-        ) : (
-          <p className={styles.previewNoLink}>
-            Ask the organizer for an invite link to sign up.
-          </p>
-        )
-      ) : joinToken ? (
+      {joinToken ? (
         <button
           type='button'
           className={styles.previewJoinBtn}
           onClick={joinFromPreview}
           disabled={joining}
         >
-          {joining ? "Joining..." : "Join this circle"}
+          {joining
+            ? "Joining..."
+            : isMealTrain
+              ? "Join this meal train"
+              : "Join this circle"}
         </button>
       ) : (
         <p className={styles.previewNoLink}>
