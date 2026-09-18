@@ -3,6 +3,7 @@
 import styles from "./PageIntro.module.css";
 import LayoutWrapper from "../LayoutWrapper";
 import SectionHeading from "../SectionHeading/SectionHeading";
+import Button from "../Button/Button";
 
 interface Props {
   title: string;
@@ -35,9 +36,16 @@ export default function PageIntro({
                 <span className={styles.headingii}>{title2}</span>
               </h1>
               <p className={styles.copy}>{copy}</p>
+              <div className={styles.btnContainer}>
+                <Button
+                  href='/create-circle'
+                  text='Create a Circle or Meal Train'
+                  btnType='white'
+                />
+               
+              </div>
             </div>
-            <div className={styles.right}>
-            </div>
+            <div className={styles.right}></div>
           </div>
         </div>
       </LayoutWrapper>

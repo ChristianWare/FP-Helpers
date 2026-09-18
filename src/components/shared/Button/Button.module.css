@@ -32,6 +32,12 @@
   border: 1px solid var(--lightBlack);
 }
 
+.white {
+  color: var(--purple);
+  background-color: var(--white);
+  border: 1px solid var(--white);
+}
+
 .primaryii {
   color: var(--purple);
   border: 1px solid var(--purple);
