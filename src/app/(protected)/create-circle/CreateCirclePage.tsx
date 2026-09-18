@@ -395,9 +395,9 @@ export default function CreateCirclePage({ organizerFirstName }: Props) {
         <LayoutWrapper>
           <div className={styles.wrapper}>
             <header className={styles.header}>
-              <Link href='/dashboard' className={styles.backLink}>
+              {/* <Link href='/dashboard' className={styles.backLink}>
                 ← Dashboard
-              </Link>
+              </Link> */}
               <p className={styles.greeting}>
                 Hi {organizerFirstName} —{" "}
                 {isMealTrain
